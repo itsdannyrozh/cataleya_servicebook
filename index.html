@@ -381,7 +381,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 .menu-grid a .mi-num{color:var(--gold);font-family:var(--font-d);font-size:20px;margin-right:12px;}
 
 /* control buttons */
-.deck-controls{display:flex;gap:10px;align-items:center;background:rgba(27,40,20,.7);backdrop-filter:blur(8px);border:1px solid rgba(205,184,132,.25);border-radius:100px;padding:8px 14px;}
+.deck-controls{display:flex;gap:10px;align-items:center;background:rgba(27,40,20,.7);backdrop-filter:blur(8px);border:1px solid rgba(205,184,132,.25);border-radius:100px;padding:8px 14px;transition:opacity .34s var(--ease),transform .34s var(--ease);}
+.deck-controls.ui-hidden{opacity:0;pointer-events:none;transform:translateX(-50%) translateY(28px);}
 .deck-controls button{background:none;border:none;color:var(--on-dark-soft);font-family:var(--font-b);font-size:15px;cursor:pointer;padding:6px 12px;border-radius:100px;transition:.2s;letter-spacing:.05em;}
 .deck-controls button:hover{color:var(--gold-bright);background:rgba(205,184,132,.12);}
 .deck-controls .dot{width:1px;height:18px;background:rgba(205,184,132,.25);}
@@ -390,8 +391,12 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 /* ---------- MOBILE / TOUCH ---------- */
 @media (max-width:900px){
   .hint{display:none;}
-  .deck-controls{bottom:14px;padding:7px 10px;gap:6px;}
-  .deck-controls button{font-size:15px;padding:9px 14px;}
+  .deck-controls{bottom:calc(16px + env(safe-area-inset-bottom));padding:8px 10px;gap:5px;background:rgba(18,24,13,.9);}
+  .deck-controls button{font-size:15px;padding:11px 16px;}
+  .menu{padding:56px 22px calc(40px + env(safe-area-inset-bottom));}
+  .menu h3{font-size:26px;margin-bottom:20px;}
+  .menu-grid{grid-template-columns:1fr;gap:0;}
+  .menu-grid a{font-size:17px;padding:13px 0;}
 }
 .rotate-hint{display:none;}
 @media (max-width:900px) and (orientation:portrait){
@@ -1620,7 +1625,7 @@ class Deck{
     this.i=0;
     this.scale();addEventListener('resize',()=>this.scale());
     document.getElementById('pageTotal').textContent=this.slides.length;
-    this.buildMenu();this.keys();this.wheel();this.touch();this.buttons();
+    this.buildMenu();this.keys();this.wheel();this.mobileUI();this.touch();this.buttons();
     // hash deep-link
     const h=parseInt(location.hash.replace('#s',''));
     this.show(Number.isFinite(h)&&h>0?h-1:0);
@@ -1639,6 +1644,7 @@ class Deck{
     document.getElementById('pageNow').textContent=this.i+1;
     document.getElementById('progress').style.width=((this.i+1)/this.slides.length*100)+'%';
     history.replaceState(null,'','#s'+(this.i+1));
+    this.pokeControls&&this.pokeControls();
   }
   next(){this.show(this.i+1);}
   prev(){this.show(this.i-1);}
@@ -1661,10 +1667,28 @@ class Deck{
     else if(e.key==='Escape'){this.toggleMenu(false);}
     else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
   });}
-  wheel(){let t=0;addEventListener('wheel',e=>{const now=Date.now();if(now-t<650)return;if(Math.abs(e.deltaY)<24)return;t=now;e.deltaY>0?this.next():this.prev();},{passive:true});}
-  touch(){let x=0,y=0;addEventListener('touchstart',e=>{x=e.touches[0].clientX;y=e.touches[0].clientY;},{passive:true});
-    addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-x,dy=e.changedTouches[0].clientY-y;
-      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50)dx<0?this.next():this.prev();},{passive:true});}
+  wheel(){let t=0;addEventListener('wheel',e=>{if(e.ctrlKey)return;const now=Date.now();if(now-t<650)return;if(Math.abs(e.deltaY)<24)return;t=now;e.deltaY>0?this.next():this.prev();},{passive:true});}
+  mobileUI(){
+    const touchLike=matchMedia('(max-width:900px)').matches||matchMedia('(hover:none)').matches;
+    const c=document.querySelector('.deck-controls');let t;
+    this.pokeControls=()=>{if(!touchLike||!c)return;c.classList.remove('ui-hidden');clearTimeout(t);t=setTimeout(()=>c.classList.add('ui-hidden'),3500);};
+    if(touchLike)this.pokeControls();
+  }
+  touch(){
+    const menuOpen=()=>document.getElementById('menu').classList.contains('open');
+    let x=0,y=0,st=0,single=false;
+    addEventListener('touchstart',e=>{single=e.touches.length===1;if(single){x=e.touches[0].clientX;y=e.touches[0].clientY;st=Date.now();}},{passive:true});
+    addEventListener('touchmove',e=>{if(e.touches.length>1)single=false;},{passive:true});
+    addEventListener('touchend',e=>{
+      if(!single)return;single=false;
+      if(e.target.closest('.deck-controls')||e.target.closest('.menu')||e.target.closest('.rotate-hint'))return;
+      const tp=e.changedTouches[0],dx=tp.clientX-x,dy=tp.clientY-y,adx=Math.abs(dx),ady=Math.abs(dy);
+      const vv=window.visualViewport,zoomed=vv&&vv.scale>1.05;
+      if(adx+ady<12&&Date.now()-st<300){this.pokeControls&&this.pokeControls();return;} /* tap → reveal bar */
+      if(zoomed||menuOpen())return;                                                       /* zoomed: reading/panning, don't switch */
+      if(adx>ady&&adx>64){dx<0?this.next():this.prev();}
+    },{passive:true});
+  }
   buttons(){
     document.getElementById('btnNext').onclick=()=>this.next();
     document.getElementById('btnPrev').onclick=()=>this.prev();
