@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CATALEYA · Сервис-бук</title>
+<style>
+/* =========================================================
+   CATALEYA — Service Book
+   Fixed 16:9 stage (1920×1080), scaled to viewport.
+   Brand system built from the official logo:
+     forest green #2B3D22 · gold #96843B · cream #FFF8EF
+   Type: Cormorant Garamond (display serif) + Century Gothic (sans)
+   Both carry full Cyrillic. Files embedded from assets/fonts.
+   ========================================================= */
+
+/* ---------- FONTS ---------- */
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-Light.ttf') format('truetype');font-weight:300;font-style:normal;font-display:swap;}
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap;}
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-SemiBold.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap;}
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-Italic.ttf') format('truetype');font-weight:400;font-style:italic;font-display:swap;}
+@font-face{font-family:'Cormorant';src:url('assets/fonts/CormorantGaramond-MediumItalic.ttf') format('truetype');font-weight:500;font-style:italic;font-display:swap;}
+@font-face{font-family:'Century';src:url('assets/fonts/CenturyGothic.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Century';src:url('assets/fonts/CenturyGothic-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;}
+
+/* ---------- TOKENS ---------- */
+:root{
+  --green-900:#1b2814; --green:#2b3d22; --green-700:#37492a; --green-600:#47603a;
+  --gold:#96843b; --gold-bright:#bfa456; --gold-soft:#cdb884;
+  --cream:#fff8ef; --cream-2:#f8f0e2; --sand:#efe4d2; --blush:#f2e6d5;
+  --ink:#2b3d22; --ink-soft:#63705a; --line:#e4d8c4;
+  --on-dark:#f5eddf; --on-dark-soft:#c8cfba; --on-dark-line:rgba(205,184,132,.28);
+
+  --font-d:'Cormorant',Georgia,serif;
+  --font-b:'Century','Century Gothic',sans-serif;
+
+  --stage-bg:#12180d;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --safe:112px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* ---------- FIXED 16:9 STAGE (mandatory base) ---------- */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg);}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg);}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--cream);}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--cream);}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+img,video,canvas,svg{max-width:100%;max-height:100%;}
+.deck-controls{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:1000;}
+
+/* ---------- SLIDE TRANSITION ---------- */
+.slide{transition:opacity .7s var(--ease);}
+
+/* ---------- THEMES ---------- */
+.slide{color:var(--ink);}
+.slide.dark{background:var(--green);color:var(--on-dark);}
+.slide.deep{background:var(--green-900);color:var(--on-dark);}
+
+/* ---------- COMMON LAYOUT ---------- */
+.pad{position:absolute;inset:0;padding:var(--safe);}
+.fill-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.veil{position:absolute;inset:0;}
+
+/* ---------- REVEAL ANIMATIONS ---------- */
+.reveal{opacity:0;transform:translateY(34px);transition:opacity .8s var(--ease),transform .8s var(--ease);}
+.slide.visible .reveal{opacity:1;transform:none;}
+.slide.visible .reveal:nth-child(1){transition-delay:.06s}
+.slide.visible .reveal:nth-child(2){transition-delay:.14s}
+.slide.visible .reveal:nth-child(3){transition-delay:.22s}
+.slide.visible .reveal:nth-child(4){transition-delay:.30s}
+.slide.visible .reveal:nth-child(5){transition-delay:.38s}
+.slide.visible .reveal:nth-child(6){transition-delay:.46s}
+.r2{transition-delay:.14s}.r3{transition-delay:.22s}.r4{transition-delay:.30s}
+.r5{transition-delay:.38s}.r6{transition-delay:.46s}.r7{transition-delay:.54s}.r8{transition-delay:.62s}
+.slide.visible .grow-line{transform:scaleX(1);}
+.grow-line{transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease) .2s;}
+
+/* ---------- TYPOGRAPHY HELPERS ---------- */
+.kicker{font-family:var(--font-b);font-weight:400;font-size:20px;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);}
+.dark .kicker,.deep .kicker{color:var(--gold-bright);}
+.serif{font-family:var(--font-d);}
+.italic{font-style:italic;}
+.muted{color:var(--ink-soft);}
+.dark .muted,.deep .muted{color:var(--on-dark-soft);}
+
+/* orchid divider mark */
+.orchid-rule{display:flex;align-items:center;gap:22px;}
+.orchid-rule .ln{height:1px;width:120px;background:var(--gold);opacity:.6;}
+.orchid-rule img{width:40px;height:auto;opacity:.95;}
+
+/* small caps label chip */
+.chip{display:inline-flex;align-items:center;gap:12px;font-family:var(--font-b);font-size:18px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);}
+
+/* ---------- CHROME (persistent footer) ---------- */
+.chrome{position:absolute;left:0;right:0;bottom:0;height:var(--safe);z-index:40;pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:space-between;padding:0 var(--safe) 44px;}
+.chrome-logo{height:40px;width:auto;object-fit:contain;}
+.chrome .logo-dark{display:none;}
+.deck-stage.dark-chrome .logo-light{display:none;}
+.deck-stage.dark-chrome .logo-dark{display:block;}
+.chrome-page{font-family:var(--font-b);font-size:17px;letter-spacing:.32em;color:var(--ink-soft);}
+.deck-stage.dark-chrome .chrome-page{color:var(--on-dark-soft);}
+.chrome-page b{color:var(--gold);font-weight:400;}
+.deck-stage.dark-chrome .chrome-page b{color:var(--gold-bright);}
+
+/* progress bar */
+.progress{position:absolute;left:0;top:0;height:3px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-bright));z-index:60;transition:width .5s var(--ease);}
+
+/* =========================================================
+   ARCHETYPE: COVER
+   ========================================================= */
+.s-cover .fill-img{filter:saturate(1.02);}
+.s-cover .veil{background:linear-gradient(180deg,rgba(20,26,14,.28) 0%,rgba(20,26,14,.55) 55%,rgba(20,26,14,.78) 100%);}
+.cover-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 200px;}
+.cover-orchid{width:120px;margin-bottom:30px;}
+.cover-word{width:760px;max-width:64%;margin-bottom:30px;}
+.cover-title{font-family:var(--font-d);font-weight:300;font-size:88px;line-height:1.06;color:var(--on-dark);letter-spacing:.01em;}
+.cover-sub{font-family:var(--font-b);font-size:22px;letter-spacing:.4em;text-transform:uppercase;color:var(--gold-bright);margin-top:26px;}
+.cover-foot{position:absolute;left:0;right:0;bottom:118px;text-align:center;font-family:var(--font-b);font-size:18px;letter-spacing:.32em;text-transform:uppercase;color:var(--on-dark-soft);}
+
+/* =========================================================
+   ARCHETYPE: SECTION DIVIDER
+   ========================================================= */
+.s-divider .fill-img{opacity:1;}
+.s-divider.dark .veil{background:linear-gradient(105deg,rgba(27,40,20,.90) 0%,rgba(27,40,20,.72) 45%,rgba(27,40,20,.30) 100%);}
+.s-divider.light .veil{background:linear-gradient(105deg,rgba(255,248,239,.94) 0%,rgba(255,248,239,.80) 45%,rgba(255,248,239,.32) 100%);}
+.divider-inner{position:absolute;left:var(--safe);top:50%;transform:translateY(-50%);max-width:1180px;}
+.divider-num{font-family:var(--font-d);font-weight:300;font-size:300px;line-height:.8;color:var(--gold);opacity:.20;position:absolute;right:120px;top:50%;transform:translateY(-50%);pointer-events:none;}
+.divider-kicker{margin-bottom:30px;}
+.divider-title{font-family:var(--font-d);font-weight:400;font-size:118px;line-height:1.02;letter-spacing:.005em;}
+.divider-sub{font-family:var(--font-d);font-style:italic;font-weight:400;font-size:44px;color:var(--gold);margin-top:26px;}
+.s-divider.dark .divider-sub{color:var(--gold-bright);}
+.divider-desc{font-family:var(--font-b);font-size:26px;line-height:1.6;max-width:760px;margin-top:34px;color:inherit;}
+.s-divider.dark .divider-desc{color:var(--on-dark-soft);}
+.s-divider.light .divider-desc{color:var(--ink-soft);}
+
+/* =========================================================
+   ARCHETYPE: QUOTE / MANIFESTO
+   ========================================================= */
+.s-quote{display:flex;align-items:center;justify-content:center;}
+.s-quote .quote-orchid{width:74px;margin:0 auto 40px;display:block;opacity:.9;}
+.quote-inner{max-width:1320px;text-align:center;padding:0 60px;}
+.quote-big{font-family:var(--font-d);font-weight:400;font-size:64px;line-height:1.28;letter-spacing:.005em;}
+.quote-big .em{font-style:italic;color:var(--gold);}
+.dark .quote-big .em,.deep .quote-big .em{color:var(--gold-bright);}
+.quote-attr{font-family:var(--font-b);font-size:20px;letter-spacing:.32em;text-transform:uppercase;margin-top:44px;color:var(--gold);}
+.dark .quote-attr,.deep .quote-attr{color:var(--gold-bright);}
+
+/* =========================================================
+   ARCHETYPE: CONTENT (head + body)
+   ========================================================= */
+.s-head{margin-bottom:52px;}
+.s-head .kicker{display:block;margin-bottom:20px;}
+.s-title{font-family:var(--font-d);font-weight:400;font-size:74px;line-height:1.04;}
+.s-title .em{font-style:italic;color:var(--gold);}
+.dark .s-title .em,.deep .s-title .em{color:var(--gold-bright);}
+.s-lead{font-family:var(--font-d);font-style:italic;font-size:38px;line-height:1.35;color:var(--ink-soft);max-width:1180px;margin-top:22px;}
+.dark .s-lead,.deep .s-lead{color:var(--on-dark-soft);}
+
+/* two-column split with image */
+.split{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;}
+.split .col-text{padding:var(--safe);display:flex;flex-direction:column;justify-content:center;}
+.split .col-img{position:relative;overflow:hidden;}
+.split .col-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.split.img-left .col-img{order:-1;}
+
+/* body text blocks */
+.body-lg{font-family:var(--font-d);font-weight:400;font-size:40px;line-height:1.44;}
+.body-lg .em{font-style:italic;color:var(--gold);}
+.dark .body-lg .em{color:var(--gold-bright);}
+.body{font-family:var(--font-b);font-size:26px;line-height:1.62;color:var(--ink);}
+.dark .body,.deep .body{color:var(--on-dark);}
+.body.soft,.p-soft{color:var(--ink-soft);}
+.dark .p-soft{color:var(--on-dark-soft);}
+.stack>*+*{margin-top:26px;}
+.stack-sm>*+*{margin-top:16px;}
+
+/* elegant checklist */
+.list{list-style:none;}
+.list li{position:relative;padding-left:44px;font-family:var(--font-b);font-size:25px;line-height:1.5;margin:18px 0;color:var(--ink);}
+.dark .list li,.deep .list li{color:var(--on-dark);}
+.list li::before{content:"";position:absolute;left:0;top:.62em;width:15px;height:15px;background:url('assets/brand/cataleya-orchid-gold.png') center/contain no-repeat;opacity:.9;}
+.list.dash li::before{content:"";top:.72em;left:2px;width:22px;height:2px;background:var(--gold);border-radius:2px;}
+.list.avoid li::before{content:"✕";background:none;color:#b9552f;font-family:var(--font-b);font-size:20px;top:.16em;left:4px;width:auto;height:auto;font-weight:700;}
+.list.tick li::before{content:"";top:.35em;left:2px;width:22px;height:12px;border-left:2.5px solid var(--gold);border-bottom:2.5px solid var(--gold);transform:rotate(-45deg);background:none;}
+
+/* speech / phrase cards */
+.phrase{font-family:var(--font-d);font-style:italic;font-size:30px;line-height:1.4;color:var(--ink);padding:22px 30px;border-left:3px solid var(--gold);background:rgba(150,132,59,.06);border-radius:0 10px 10px 0;}
+.dark .phrase,.deep .phrase{color:var(--on-dark);background:rgba(205,184,132,.10);border-left-color:var(--gold-bright);}
+
+/* =========================================================
+   CARD SYSTEMS
+   ========================================================= */
+.card{background:var(--cream-2);border:1px solid var(--line);border-radius:18px;padding:38px 36px;position:relative;}
+.dark .card,.deep .card{background:rgba(255,248,239,.05);border-color:var(--on-dark-line);}
+.card .c-icon{width:64px;height:64px;object-fit:contain;margin-bottom:22px;}
+.card .c-num{font-family:var(--font-d);font-size:40px;color:var(--gold);line-height:1;margin-bottom:14px;}
+.card .c-title{font-family:var(--font-d);font-weight:600;font-size:33px;line-height:1.12;margin-bottom:14px;}
+.card .c-body{font-family:var(--font-b);font-size:21px;line-height:1.55;color:var(--ink-soft);}
+.dark .card .c-body,.deep .card .c-body{color:var(--on-dark-soft);}
+
+.card .list li{font-size:19px;margin:9px 0;padding-left:32px;}
+.card .list li::before{width:12px;height:12px;top:.5em;}
+.card.tight{padding:32px 32px;}
+
+/* value overview tile */
+.vtile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;padding:18px 10px;}
+.vtile .vt-title{font-family:var(--font-d);font-weight:600;font-size:23px;line-height:1.12;}
+.vtile .vt-n{position:absolute;top:14px;right:18px;font-family:var(--font-d);font-size:22px;color:var(--gold);opacity:.6;}
+.vtile{position:relative;border:1px solid var(--line);border-radius:16px;background:var(--cream-2);}
+.lead-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--green-700));color:var(--on-dark);padding:18px;}
+.lead-tile .lt-num{font-family:var(--font-d);font-weight:300;font-size:92px;line-height:.9;color:var(--gold-bright);}
+.lead-tile .lt-cap{font-family:var(--font-b);font-size:16px;letter-spacing:.24em;text-transform:uppercase;margin-top:8px;color:var(--on-dark-soft);}
+
+.grid{display:grid;gap:28px;}
+.g2{grid-template-columns:repeat(2,1fr);}
+.g3{grid-template-columns:repeat(3,1fr);}
+.g4{grid-template-columns:repeat(4,1fr);}
+.g5{grid-template-columns:repeat(5,1fr);}
+.g6{grid-template-columns:repeat(6,1fr);}
+
+/* icon medallion (AI icon on gold ring) */
+.medallion{width:96px;height:96px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;flex:none;background:var(--cream);}
+.dark .medallion,.deep .medallion{background:var(--cream);border-color:var(--gold-bright);}
+.medallion img{width:58px;height:58px;object-fit:contain;mix-blend-mode:multiply;}
+
+/* value row (icon + text) */
+.vrow{display:flex;gap:26px;align-items:flex-start;}
+.vrow .v-txt h4{font-family:var(--font-d);font-weight:600;font-size:29px;margin-bottom:8px;line-height:1.1;}
+.vrow .v-txt p{font-family:var(--font-b);font-size:19px;line-height:1.5;color:var(--ink-soft);}
+.dark .vrow .v-txt p{color:var(--on-dark-soft);}
+
+/* numbered principle block */
+.principle{display:flex;gap:34px;align-items:flex-start;}
+.principle .p-mark{font-family:var(--font-d);font-size:96px;line-height:.8;color:var(--gold);opacity:.9;flex:none;width:120px;}
+.dark .principle .p-mark{color:var(--gold-bright);}
+
+/* KHB big letter */
+.khb-letter{font-family:var(--font-d);font-weight:400;font-size:150px;line-height:.8;color:var(--gold);}
+.dark .khb-letter{color:var(--gold-bright);}
+
+/* stat / step number pill */
+.stepnum{font-family:var(--font-d);font-weight:300;font-size:150px;line-height:.8;color:var(--gold);opacity:.9;}
+.dark .stepnum,.deep .stepnum{color:var(--gold-bright);}
+
+/* mini column headers inside step slides */
+.subhead{font-family:var(--font-b);font-weight:700;font-size:17px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.dark .subhead,.deep .subhead{color:var(--gold-bright);}
+.subhead::after{content:"";flex:1;height:1px;background:var(--line);}
+.dark .subhead::after,.deep .subhead::after{background:var(--on-dark-line);}
+
+/* four-quadrant step grid */
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:34px 60px;}
+.quad .q .body,.quad .q .list li{font-size:21px;}
+.quad .q .list li{margin:10px 0;padding-left:38px;}
+.quad .q .list.avoid li{color:#a8492a;}
+.dark .quad .q .list.avoid li{color:#e0a08a;}
+
+/* FAQ */
+.faq-item{border-bottom:1px solid var(--line);padding:26px 0;}
+.dark .faq-item{border-color:var(--on-dark-line);}
+.faq-q{font-family:var(--font-d);font-weight:600;font-size:30px;color:var(--ink);display:flex;gap:18px;align-items:baseline;}
+.dark .faq-q{color:var(--on-dark);}
+.faq-q .qm{color:var(--gold);font-size:26px;}
+.faq-a{font-family:var(--font-b);font-size:21px;line-height:1.5;color:var(--ink-soft);margin-top:12px;padding-left:40px;}
+.dark .faq-a{color:var(--on-dark-soft);}
+
+/* pill badges (BLAST / СССР letters) */
+.bigletter{width:104px;height:104px;border-radius:50%;background:var(--green);color:var(--cream);font-family:var(--font-d);font-weight:600;font-size:52px;display:flex;align-items:center;justify-content:center;flex:none;}
+.dark .bigletter{background:var(--gold);color:var(--green-900);}
+.letterrow{display:flex;gap:30px;align-items:flex-start;}
+.letterrow .lr-txt h4{font-family:var(--font-d);font-weight:600;font-size:30px;margin-bottom:6px;}
+.letterrow .lr-txt p{font-family:var(--font-b);font-size:21px;line-height:1.5;color:var(--ink-soft);}
+.dark .letterrow .lr-txt p{color:var(--on-dark-soft);}
+
+/* pull number / priority list */
+.prio{counter-reset:p;}
+.prio li{list-style:none;display:flex;gap:24px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);font-family:var(--font-b);font-size:24px;}
+.dark .prio li{border-color:var(--on-dark-line);}
+.prio li::before{counter-increment:p;content:counter(p);font-family:var(--font-d);font-size:38px;color:var(--gold);width:52px;flex:none;text-align:center;}
+
+/* two-tone panel */
+.panel{background:var(--cream-2);border:1px solid var(--line);border-radius:20px;padding:44px 48px;}
+.dark .panel,.deep .panel{background:rgba(0,0,0,.16);border-color:var(--on-dark-line);}
+.panel.gold{background:linear-gradient(135deg,rgba(150,132,59,.12),rgba(150,132,59,.04));border-color:rgba(150,132,59,.35);}
+
+/* project row (FORNO group) */
+.proj{display:flex;align-items:baseline;gap:22px;padding:20px 0;border-bottom:1px solid var(--on-dark-line);}
+.proj .p-name{font-family:var(--font-d);font-weight:600;font-size:36px;color:var(--on-dark);min-width:300px;}
+.proj .p-name .tag{font-family:var(--font-b);font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-bright);display:block;margin-top:4px;}
+.proj .p-desc{font-family:var(--font-b);font-size:20px;line-height:1.5;color:var(--on-dark-soft);}
+.proj.flag .p-name{color:var(--gold-bright);}
+
+/* helpers */
+.center{text-align:center;}
+.mt-s{margin-top:20px;}.mt-m{margin-top:36px;}.mt-l{margin-top:56px;}
+.two-col-text{column-count:2;column-gap:70px;}
+.maxw{max-width:1200px;}
+.rowflex{display:flex;gap:40px;}
+.tag-emoji{font-size:.9em;}
+.mw-1300{max-width:1300px;}.mw-1500{max-width:1500px;}
+
+/* =========================================================
+   FORNO GROUP · RESTAURANT BENTO
+   ========================================================= */
+.s-projects .proj-wrap{position:absolute;inset:0;padding:72px var(--safe) 116px;display:flex;flex-direction:column;}
+.proj-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px;margin-bottom:24px;}
+.proj-head .ph-title{font-family:var(--font-d);font-weight:400;font-size:52px;line-height:1.02;}
+.proj-head .ph-title .em{font-style:italic;color:var(--gold-bright);}
+.proj-head .ph-tag{font-family:var(--font-d);font-style:italic;font-size:29px;color:var(--gold-soft);white-space:nowrap;padding-bottom:6px;}
+.bento{flex:1;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:1fr 1fr;gap:18px;
+  grid-template-areas:"amavi amavi amavi amavi cat cat" "lr mont calc eat cat cat";}
+.rcard{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--on-dark-line);background:#0f150a;isolation:isolate;}
+.rcard .rc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.1s var(--ease);}
+.rcard:hover .rc-img{transform:scale(1.045);}
+.rc-scrim{position:absolute;inset:0;z-index:1;background:
+  linear-gradient(180deg,rgba(12,18,8,0) 34%,rgba(12,18,8,.60) 68%,rgba(11,16,7,.93) 100%),
+  linear-gradient(180deg,rgba(12,18,8,.30) 0%,rgba(12,18,8,0) 24%);}
+.rc-body{position:absolute;left:0;right:0;bottom:0;padding:24px 26px;z-index:2;}
+.rc-tag{font-family:var(--font-b);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:9px;}
+.rc-name{font-family:var(--font-d);font-weight:600;color:#fff7ea;font-size:30px;line-height:1.04;}
+.rc-desc{font-family:var(--font-b);font-size:16px;line-height:1.46;color:rgba(241,237,225,.82);margin-top:9px;max-width:38ch;}
+.rcard.is-hero .rc-name{font-size:54px;}
+.rcard.is-hero .rc-tag{font-size:15px;}
+.rcard.is-hero .rc-desc{font-size:19px;max-width:46ch;margin-top:13px;}
+.rcard.is-feature .rc-name{font-size:40px;}
+.rcard.is-feature .rc-desc{font-size:17px;}
+.rcard.is-mini .rc-body{padding:20px 21px;}
+.rcard.is-mini .rc-name{font-size:25px;}
+.rcard.is-mini .rc-desc{font-size:14px;margin-top:6px;line-height:1.4;}
+.rc-badge{position:absolute;top:18px;left:18px;z-index:3;display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-b);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--green-900);font-weight:700;
+  background:linear-gradient(135deg,var(--gold-bright),var(--gold-soft));padding:8px 16px;border-radius:100px;box-shadow:0 6px 20px rgba(0,0,0,.28);}
+.rc-here{position:absolute;top:18px;left:18px;z-index:3;display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--font-b);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-bright);
+  border:1px solid var(--gold-bright);background:rgba(11,16,7,.44);backdrop-filter:blur(4px);padding:7px 15px;border-radius:100px;}
+.rc-here img{width:14px;height:14px;mix-blend-mode:normal;}
+
+/* =========================================================
+   EXTRA CONTENT HELPERS (rules, concept, uniform, steps, BLAST…)
+   ========================================================= */
+.photo-card{position:relative;border-radius:16px;overflow:hidden;background:var(--cream-2);border:1px solid var(--line);}
+.photo-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;}
+.photo-card .pc-cap{position:absolute;left:0;right:0;bottom:0;padding:16px 22px;background:linear-gradient(180deg,rgba(27,40,20,0),rgba(27,40,20,.85));
+  color:var(--on-dark);font-family:var(--font-b);font-size:15px;letter-spacing:.22em;text-transform:uppercase;}
+.card.xs{padding:26px 26px;border-radius:14px;}
+.card.xs .c-title{font-size:25px;margin-bottom:12px;}
+.card.xs .list li{font-size:17px;margin:8px 0;padding-left:30px;}
+.card.xs .list li::before{width:11px;height:11px;top:.5em;}
+.letter-col{display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;}
+.letter-col h4{font-family:var(--font-d);font-weight:600;font-size:25px;line-height:1.05;}
+.letter-col .lc-en{font-family:var(--font-b);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-top:-6px;}
+.dark .letter-col .lc-en,.deep .letter-col .lc-en{color:var(--gold-bright);}
+.letter-col p{font-family:var(--font-b);font-size:17px;line-height:1.5;color:var(--ink-soft);}
+.dark .letter-col p,.deep .letter-col p{color:var(--on-dark-soft);}
+.khb-card{position:relative;border:1px solid var(--on-dark-line);border-radius:18px;padding:36px 34px;background:rgba(255,248,239,.04);overflow:hidden;}
+.khb-card .khb-big{font-family:var(--font-d);font-weight:300;font-size:132px;line-height:.72;color:var(--gold-bright);}
+.khb-card .khb-t{font-family:var(--font-d);font-weight:600;font-size:32px;margin:14px 0 12px;}
+.khb-card .khb-d{font-family:var(--font-b);font-size:20px;line-height:1.55;color:var(--on-dark-soft);}
+.sb-n{font-family:var(--font-d);font-weight:300;font-size:66px;line-height:.78;color:var(--gold);flex:none;}
+.dark .sb-n,.deep .sb-n{color:var(--gold-bright);}
+.mini-journey{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
+.mj{position:relative;border:1px solid var(--on-dark-line);border-radius:14px;padding:22px 20px;background:rgba(255,248,239,.04);}
+.mj .mj-n{font-family:var(--font-d);font-size:30px;color:var(--gold-bright);line-height:1;}
+.mj .mj-t{font-family:var(--font-d);font-weight:600;font-size:22px;margin-top:8px;line-height:1.1;}
+.dark .mj .mj-t,.deep .mj .mj-t{color:var(--on-dark);}
+
+/* =========================================================
+   SLIDE INDEX MENU
+   ========================================================= */
+.menu{position:fixed;inset:0;background:rgba(18,24,13,.96);z-index:2000;opacity:0;pointer-events:none;transition:opacity .4s var(--ease);overflow-y:auto;padding:80px 100px;}
+.menu.open{opacity:1;pointer-events:auto;}
+.menu h3{font-family:var(--font-d);font-style:italic;color:var(--gold-bright);font-size:34px;margin-bottom:36px;}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 48px;}
+.menu-grid a{font-family:var(--font-b);font-size:18px;color:var(--on-dark-soft);text-decoration:none;padding:9px 0;border-bottom:1px solid rgba(205,184,132,.14);cursor:pointer;transition:color .2s,padding-left .2s;}
+.menu-grid a:hover{color:var(--gold-bright);padding-left:8px;}
+.menu-grid a .mi-num{color:var(--gold);font-family:var(--font-d);font-size:20px;margin-right:12px;}
+
+/* control buttons */
+.deck-controls{display:flex;gap:10px;align-items:center;background:rgba(27,40,20,.7);backdrop-filter:blur(8px);border:1px solid rgba(205,184,132,.25);border-radius:100px;padding:8px 14px;}
+.deck-controls button{background:none;border:none;color:var(--on-dark-soft);font-family:var(--font-b);font-size:15px;cursor:pointer;padding:6px 12px;border-radius:100px;transition:.2s;letter-spacing:.05em;}
+.deck-controls button:hover{color:var(--gold-bright);background:rgba(205,184,132,.12);}
+.deck-controls .dot{width:1px;height:18px;background:rgba(205,184,132,.25);}
+.hint{position:fixed;right:22px;bottom:22px;z-index:1000;font-family:var(--font-b);font-size:13px;letter-spacing:.1em;color:rgba(245,237,223,.4);}
+
+/* ---------- MOBILE / TOUCH ---------- */
+@media (max-width:900px){
+  .hint{display:none;}
+  .deck-controls{bottom:14px;padding:7px 10px;gap:6px;}
+  .deck-controls button{font-size:15px;padding:9px 14px;}
+}
+.rotate-hint{display:none;}
+@media (max-width:900px) and (orientation:portrait){
+  .rotate-hint{display:flex;position:fixed;inset:0;z-index:3000;
+    background:radial-gradient(120% 90% at 50% 10%,#243218 0%,#141a0d 70%);
+    align-items:center;justify-content:center;text-align:center;padding:44px;}
+  .rotate-hint .rh-in{max-width:380px;}
+  .rotate-hint .rh-orchid{width:60px;margin:0 auto 22px;display:block;opacity:.95;}
+  .rotate-hint .rh-ico{width:76px;height:76px;margin:0 auto 26px;color:var(--gold-bright);
+    animation:rhspin 2.8s var(--ease) infinite;}
+  .rotate-hint h4{font-family:var(--font-d);font-weight:500;font-size:34px;color:var(--on-dark);line-height:1.14;margin-bottom:14px;}
+  .rotate-hint p{font-family:var(--font-b);font-size:16px;line-height:1.55;color:var(--on-dark-soft);margin-bottom:30px;}
+  .rotate-hint button{font-family:var(--font-b);font-size:15px;letter-spacing:.06em;color:var(--green-900);font-weight:700;
+    background:linear-gradient(135deg,var(--gold-bright),var(--gold-soft));border:none;border-radius:100px;padding:14px 32px;cursor:pointer;}
+  .rotate-hint.dismissed{display:none;}
+}
+@keyframes rhspin{0%,52%{transform:rotate(0)}80%,100%{transform:rotate(-90deg)}}
+
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff;}
+  .deck-viewport{position:static;overflow:visible;background:#fff;}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none;}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;}
+  .slide *{transition:none!important;animation:none!important;}
+  .reveal{opacity:1!important;transform:none!important;}
+  .grow-line{transform:scaleX(1)!important;}
+  .deck-controls,.hint,.menu,.progress{display:none!important;}
+  .chrome{position:absolute;}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important;}
+  .reveal{opacity:1;transform:none;}
+}
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+  <main class="deck-stage" id="deckStage">
+    <div class="progress" id="progress"></div>
+
+    <!-- ============ COVER ============ -->
+    <section class="slide s-cover active deep" data-menu="Обложка" data-num="">
+      <img class="fill-img" src="assets/img/cover-hero.jpg" alt="">
+      <div class="veil"></div>
+      <div class="cover-inner">
+        <img class="cover-word reveal" src="assets/brand/cataleya-mark-cream.png" alt="CATALEYA" style="width:640px;margin-bottom:14px;">
+        <div class="cover-sub reveal">Сервис-бук команды</div>
+        <div class="cover-title reveal serif italic" style="font-size:52px;margin-top:34px;color:var(--gold-soft);">Расцветай изнутри</div>
+      </div>
+      <div class="cover-foot reveal">Кафе осознанного питания · Парк «Краснодар» · FORNO GROUP</div>
+    </section>
+
+    <!-- ============ WELCOME 1 ============ -->
+    <section class="slide" data-menu="Добро пожаловать" data-num="">
+      <div class="pad" style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="reveal orchid-rule" style="margin-bottom:36px;"><img src="assets/brand/cataleya-orchid-gold.png" alt=""><span class="ln"></span></div>
+        <div class="kicker reveal" style="margin-bottom:34px;">Добро пожаловать в CATALEYA</div>
+        <div class="maxw" style="max-width:1500px;">
+          <p class="body-lg reveal">Ты держишь в руках <span class="em">не просто сервис-бук.</span> Это книга о людях, атмосфере и отношении к своему делу.</p>
+          <p class="body reveal r3" style="margin-top:30px;font-size:29px;max-width:1400px;">Она создана для каждого, кто становится частью команды CATALEYA — места, где гастрономия, природа и искренний сервис соединяются в единое впечатление. Здесь нет случайных правил: каждый стандарт, каждое действие и каждая деталь существуют ради одной цели — сделать пребывание гостя по-настоящему особенным.</p>
+        </div>
+        <div class="reveal r4 rowflex" style="margin-top:56px;gap:56px;">
+          <div class="panel gold" style="flex:1;">
+            <p class="serif italic" style="font-size:34px;line-height:1.35;color:var(--ink);">Настоящий сервис рождается не из инструкций.</p>
+            <p class="serif" style="font-size:30px;margin-top:10px;color:var(--gold);">Он рождается из внимания. Из заботы. Из искреннего желания сделать немного больше, чем от тебя ожидают.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WELCOME 2 ============ -->
+    <section class="slide dark" data-menu="Проводник в мир CATALEYA" data-num="">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="" style="opacity:.5;">
+      <div class="pad" style="display:flex;flex-direction:column;justify-content:center;">
+        <div class="maxw" style="max-width:1500px;">
+          <p class="body reveal" style="font-size:29px;">Именно поэтому в этой книге мы говорим не только о том, <b style="font-weight:400;color:var(--gold-bright);">что делать</b>, но и <b style="font-weight:400;color:var(--gold-bright);">почему</b> мы делаем это именно так.</p>
+          <p class="body-lg reveal r2" style="margin-top:36px;">Когда ты поймёшь философию CATALEYA, стандарты перестанут быть правилами. Они станут естественной частью твоей работы, <span class="em">а забота о госте — твоим образом мышления.</span></p>
+          <p class="body reveal r3 p-soft" style="margin-top:32px;font-size:27px;">Пусть эта книга станет твоим проводником в мир CATALEYA и поможет почувствовать атмосферу, которой мы живём каждый день.</p>
+        </div>
+        <div class="reveal r5" style="margin-top:56px;">
+          <div class="serif" style="font-size:46px;color:var(--on-dark);">Добро пожаловать в команду.</div>
+          <div class="serif italic" style="font-size:40px;color:var(--gold-bright);margin-top:8px;">Добро пожаловать в место, где люди расцветают изнутри.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ OPENING QUOTE ============ -->
+    <section class="slide s-quote deep" data-menu="Путеводитель по культуре" data-num="">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="" style="opacity:.4;">
+      <div class="quote-inner">
+        <img class="quote-orchid reveal" src="assets/brand/cataleya-orchid-gold.png" alt="">
+        <p class="quote-big reveal r2">«Эта книга — <span class="em">не свод правил.</span><br>Это путеводитель по культуре CATALEYA.»</p>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 01 · ФИЛОСОФИЯ ============ -->
+    <section class="slide s-divider dark" data-menu="Философия CATALEYA" data-num="01">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">01</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 01</div>
+        <h2 class="divider-title reveal r2">Философия<br>CATALEYA</h2>
+        <div class="divider-sub reveal r3">Расцветай изнутри</div>
+      </div>
+    </section>
+
+    <!-- Расцветай изнутри -->
+    <section class="slide" data-menu="Расцветай изнутри" data-num="01">
+      <div class="split">
+        <div class="col-text">
+          <span class="kicker reveal">Почему CATALEYA</span>
+          <h2 class="s-title reveal r2" style="margin-top:20px;">Название появилось<br><span class="em">не случайно</span></h2>
+          <div class="stack" style="margin-top:34px;max-width:720px;">
+            <p class="body reveal r3">Каталея — это род орхидей, символизирующих красоту, жизненную силу и гармонию. Орхидея раскрывает свою красоту только тогда, когда окружена заботой, светом и правильными условиями.</p>
+            <p class="body reveal r4">Так же и человек раскрывает свой внутренний потенциал, когда выбирает осознанный образ жизни.</p>
+            <p class="body-lg reveal r5" style="font-size:34px;">Именно поэтому наш слоган — <span class="em">«Расцветай изнутри».</span></p>
+          </div>
+        </div>
+        <div class="col-img"><img src="assets/img/orchid-macro.jpg" alt="Орхидея каталея"></div>
+      </div>
+    </section>
+
+    <!-- Кафе-оранжерея -->
+    <section class="slide" data-menu="Кафе-оранжерея" data-num="01">
+      <div class="split img-left">
+        <div class="col-img"><img src="assets/img/orangery-interior.jpg" alt="Интерьер оранжереи"></div>
+        <div class="col-text">
+          <span class="kicker reveal">Наше пространство</span>
+          <h2 class="s-title reveal r2" style="margin-top:20px;font-size:64px;">Под стеклянным<br>куполом</h2>
+          <div class="stack" style="margin-top:30px;max-width:720px;">
+            <p class="body reveal r3">CATALEYA — это кафе-оранжерея, наполненное живыми растениями, естественным светом и атмосферой спокойствия. Здесь гастрономия, природа, эстетика и искренний сервис становятся частью одного впечатления.</p>
+            <p class="body reveal r4">Мы верим, что еда — это не только источник энергии. Это забота о себе, возможность замедлиться, почувствовать момент и разделить его с близкими.</p>
+            <p class="phrase reveal r5">Каждый гость приходит за своим состоянием. Наша задача — сделать так, чтобы, уходя, он чувствовал себя немного счастливее, чем когда пришёл.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 02 · FORNO GROUP ============ -->
+    <section class="slide s-divider dark" data-menu="FORNO GROUP" data-num="02">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">02</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 02</div>
+        <h2 class="divider-title reveal r2">FORNO GROUP</h2>
+        <div class="divider-sub reveal r3">Одна команда. Разные истории.</div>
+        <p class="divider-desc reveal r4">CATALEYA — часть FORNO GROUP, команды, создающей современные гастрономические проекты с собственной философией и характером. Каждый ресторан уникален, но всех их объединяют любовь к гастрономии, внимание к деталям и высокий уровень сервиса.</p>
+      </div>
+    </section>
+
+    <!-- Наши проекты · bento -->
+    <section class="slide deep s-projects" data-menu="Наши проекты" data-num="02">
+      <div class="proj-wrap">
+        <div class="proj-head reveal">
+          <div>
+            <span class="kicker" style="display:block;margin-bottom:13px;">Наши проекты</span>
+            <h2 class="ph-title">Семья ресторанов <span class="em">FORNO GROUP</span></h2>
+          </div>
+          <div class="ph-tag">Одна команда. Разные истории.</div>
+        </div>
+        <div class="bento reveal r2">
+          <article class="rcard is-hero" style="grid-area:amavi">
+            <img class="rc-img" src="assets/img/restaurants/amavi.jpg" alt="AMAVI" style="object-position:center 44%;">
+            <div class="rc-scrim"></div>
+            <div class="rc-badge">★ Флагман</div>
+            <div class="rc-body">
+              <div class="rc-tag">Средиземноморская кухня</div>
+              <h3 class="rc-name">AMAVI</h3>
+              <p class="rc-desc">Первый ресторан компании — с него началась история и философия всей команды FORNO GROUP.</p>
+            </div>
+          </article>
+          <article class="rcard is-feature" style="grid-area:cat">
+            <img class="rc-img" src="assets/img/restaurants/cataleya.jpg" alt="CATALEYA">
+            <div class="rc-scrim"></div>
+            <div class="rc-here"><img src="assets/brand/cataleya-orchid-gold.png" alt="">Мы здесь</div>
+            <div class="rc-body">
+              <div class="rc-tag">Кафе-оранжерея</div>
+              <h3 class="rc-name">CATALEYA</h3>
+              <p class="rc-desc">Природа, гастрономия и сервис соединяются в одно впечатление под стеклянным куполом.</p>
+            </div>
+          </article>
+          <article class="rcard is-mini" style="grid-area:lr">
+            <img class="rc-img" src="assets/img/restaurants/larosee.jpg" alt="La Rosée">
+            <div class="rc-scrim"></div>
+            <div class="rc-body"><div class="rc-tag">Европейская кухня</div><h3 class="rc-name">La Rosée</h3><p class="rc-desc">Авторский взгляд и красивые встречи.</p></div>
+          </article>
+          <article class="rcard is-mini" style="grid-area:mont">
+            <img class="rc-img" src="assets/img/restaurants/monmart.jpg" alt="Monmart" style="object-position:center 46%;">
+            <div class="rc-scrim"></div>
+            <div class="rc-body"><div class="rc-tag">Лаунж-ресторан</div><h3 class="rc-name">Monmart</h3><p class="rc-desc">Вечерний Париж и искусство отдыха.</p></div>
+          </article>
+          <article class="rcard is-mini" style="grid-area:calc">
+            <img class="rc-img" src="assets/img/restaurants/calcio.jpg" alt="Calcio e Pasta">
+            <div class="rc-scrim"></div>
+            <div class="rc-body"><div class="rc-tag">Итальянская кухня</div><h3 class="rc-name">Calcio e Pasta</h3><p class="rc-desc">Домашняя кухня и семейное тепло.</p></div>
+          </article>
+          <article class="rcard is-mini" style="grid-area:eat">
+            <img class="rc-img" src="assets/img/restaurants/eatbeat.jpg" alt="EatBeat" style="object-position:center 40%;">
+            <div class="rc-scrim"></div>
+            <div class="rc-body"><div class="rc-tag">Гастропространство</div><h3 class="rc-name">EatBeat</h3><p class="rc-desc">Кухня, музыка и энергия города.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 03 · ЦЕННОСТИ ============ -->
+    <section class="slide s-divider light" data-menu="Ценности FORNO GROUP" data-num="03">
+      <img class="fill-img" src="assets/img/bg-cream-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num" style="color:var(--gold);opacity:.16;">03</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 03</div>
+        <h2 class="divider-title reveal r2">Ценности</h2>
+        <div class="divider-sub reveal r3">11 принципов, на которых стоит команда</div>
+        <p class="divider-desc reveal r4">Ценности — это то, во что мы верим и как поступаем каждый день. Сильный сервис всегда создаётся командой.</p>
+      </div>
+    </section>
+
+    <!-- Values overview -->
+    <section class="slide" data-menu="Ценности · обзор" data-num="03">
+      <div class="pad" style="padding:80px var(--safe) 96px;display:flex;flex-direction:column;">
+        <div class="grid g4 reveal" style="gap:20px;flex:1;grid-template-rows:repeat(3,1fr);">
+          <div class="lead-tile"><div class="lt-num">11</div><div class="lt-cap">Ценностей</div></div>
+          <div class="vtile"><span class="vt-n">01</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-gratitude.png" alt=""></div><div class="vt-title">Благодарность<br>и уважение</div></div>
+          <div class="vtile"><span class="vt-n">02</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-development.png" alt=""></div><div class="vt-title">Развитие и<br>профессионализм</div></div>
+          <div class="vtile"><span class="vt-n">03</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-leadership.png" alt=""></div><div class="vt-title">Лидерство</div></div>
+          <div class="vtile"><span class="vt-n">04</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-composure.png" alt=""></div><div class="vt-title">Самообладание<br>и инициатива</div></div>
+          <div class="vtile"><span class="vt-n">05</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-action.png" alt=""></div><div class="vt-title">Действие и<br>ответственность</div></div>
+          <div class="vtile"><span class="vt-n">06</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-attention.png" alt=""></div><div class="vt-title">Небезразличие</div></div>
+          <div class="vtile"><span class="vt-n">07</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-safety.png" alt=""></div><div class="vt-title">Безопасность</div></div>
+          <div class="vtile"><span class="vt-n">08</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-anticipation.png" alt=""></div><div class="vt-title">Предвосхищение</div></div>
+          <div class="vtile"><span class="vt-n">09</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-rules-soft.png" alt=""></div><div class="vt-title">Жёстко к правилам —<br>мягко к людям</div></div>
+          <div class="vtile"><span class="vt-n">10</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-cleanliness.png" alt=""></div><div class="vt-title">Чистоплотность</div></div>
+          <div class="vtile"><span class="vt-n">11</span><div class="medallion" style="width:70px;height:70px;"><img src="assets/img/icon-selfcare.png" alt=""></div><div class="vt-title">Ценность себя<br>и здоровье</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values detail 1 (01–04) -->
+    <section class="slide" data-menu="Ценности 01–04" data-num="03">
+      <div class="pad" style="padding:76px var(--safe);display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:30px;"><span class="kicker">Ценности · как это выглядит</span></div>
+        <div class="grid g2 reveal r2" style="flex:1;gap:24px 40px;">
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-gratitude.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">01 · Благодарность и уважение</div></div><ul class="list"><li>Искренне приветствуем каждого гостя</li><li>Благодарим за выбор CATALEYA</li><li>Уважительно общаемся с коллегами</li><li>Не обсуждаем гостей и сотрудников</li></ul></div>
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-development.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">02 · Развитие и профессионализм</div></div><ul class="list"><li>Знаем меню и состав блюд</li><li>Изучаем сезонные предложения</li><li>Уверенно отвечаем на вопросы гостей</li><li>Регулярно проходим обучение</li></ul></div>
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-leadership.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">03 · Лидерство</div></div><ul class="list"><li>Помогаем коллегам без просьбы</li><li>Не говорим «это не мой стол»</li><li>Замечаем и устраняем проблемы</li><li>Берём ответственность за результат</li></ul></div>
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-composure.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">04 · Самообладание и инициатива</div></div><ul class="list"><li>Не показываем суету, сохраняем доброжелательность</li><li>Принимаем решения в рамках полномочий</li><li>Вовремя обращаемся за помощью к менеджеру</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values detail 2 (05–08) -->
+    <section class="slide dark" data-menu="Ценности 05–08" data-num="03">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="" style="opacity:.32;">
+      <div class="pad" style="padding:76px var(--safe);display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:30px;"><span class="kicker">Ценности · как это выглядит</span></div>
+        <div class="grid g2 reveal r2" style="flex:1;gap:24px 40px;">
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-action.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">05 · Действие и ответственность</div></div><ul class="list"><li>Быстро реагируем на просьбы</li><li>Не откладываем задачи</li><li>Доводим каждую ситуацию до решения</li><li>Контролируем результат</li></ul></div>
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-attention.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">06 · Небезразличие</div></div><ul class="list"><li>Следим за чистотой стола</li><li>Вовремя убираем посуду</li><li>Замечаем пустые бокалы</li><li>Поддерживаем порядок в зале и на станции</li></ul></div>
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-safety.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">07 · Безопасность</div></div><ul class="list"><li>Соблюдаем стандарты безопасности</li><li>Знаем действия в нештатных ситуациях</li><li>Внимательны к детям и пожилым гостям</li><li>Поддерживаем безопасное пространство</li></ul></div>
+          <div class="card tight"><div style="display:flex;gap:18px;align-items:center;margin-bottom:12px;"><div class="medallion" style="width:60px;height:60px;"><img src="assets/img/icon-anticipation.png" alt=""></div><div class="c-title" style="margin:0;font-size:29px;">08 · Предвосхищение</div></div><ul class="list"><li>Предлагаем воду до просьбы</li><li>Вовремя меняем приборы</li><li>Замечаем, когда пора убрать стол</li><li>Думаем на один шаг вперёд</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values detail 3 (09–11) -->
+    <section class="slide" data-menu="Ценности 09–11" data-num="03">
+      <div class="pad" style="padding:76px var(--safe);display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:30px;"><span class="kicker">Ценности · как это выглядит</span></div>
+        <div class="grid g3 reveal r2" style="flex:1;gap:32px;">
+          <div class="card"><div class="medallion" style="width:64px;height:64px;margin-bottom:18px;"><img src="assets/img/icon-rules-soft.png" alt=""></div><div class="c-title">09 · Жёстко к правилам — мягко к людям</div><ul class="list"><li>Соблюдаем стандарты сервиса</li><li>Спокойно объясняем правила</li><li>Предлагаем альтернативы</li><li>Сохраняем уважительный тон</li></ul></div>
+          <div class="card"><div class="medallion" style="width:64px;height:64px;margin-bottom:18px;"><img src="assets/img/icon-cleanliness.png" alt=""></div><div class="c-title">10 · Чистоплотность</div><ul class="list"><li>Следим за своей формой</li><li>Поддерживаем порядок на станции</li><li>Содержим в чистоте столы и инвентарь</li><li>Замечаем то, что требует уборки</li></ul></div>
+          <div class="card"><div class="medallion" style="width:64px;height:64px;margin-bottom:18px;"><img src="assets/img/icon-selfcare.png" alt=""></div><div class="c-title">11 · Ценность себя и забота о здоровье</div><ul class="list"><li>Соблюдаем корпоративные правила</li><li>Поддерживаем уважительное общение</li><li>Не создаём токсичную атмосферу</li><li>Приходим на смену готовыми к работе</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 04 · ПРАВИЛА КОМАНДЫ ============ -->
+    <section class="slide s-divider dark" data-menu="Правила команды" data-num="04">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">04</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 04</div>
+        <h2 class="divider-title reveal r2">Правила<br>команды</h2>
+        <div class="divider-sub reveal r3">Высокий сервис начинается с дисциплины</div>
+      </div>
+    </section>
+
+    <!-- Дисциплина и график -->
+    <section class="slide" data-menu="Дисциплина и график" data-num="04">
+      <div class="pad" style="padding:78px var(--safe) 116px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:34px;">
+          <span class="kicker" style="display:block;margin-bottom:16px;">Правила команды</span>
+          <h2 class="s-title" style="font-size:60px;">Дисциплина и <span class="em">график</span></h2>
+        </div>
+        <div class="grid g2 reveal r2" style="flex:1;gap:44px;align-content:start;">
+          <div class="card">
+            <div class="c-title">Дисциплина</div>
+            <ul class="list">
+              <li>Приходим на смену вовремя и полностью готовыми к работе</li>
+              <li>Соблюдаем стандарты и регламенты компании</li>
+              <li>Выполняем задачи руководителя</li>
+              <li>Не покидаем рабочее место без согласования</li>
+              <li>Не используем телефон без служебной необходимости</li>
+              <li>Исключаем любые вещества, влияющие на состояние, до и во время смены</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="c-title">График работы</div>
+            <ul class="list">
+              <li>Следим за своим графиком</li>
+              <li>Замены согласовываем заранее</li>
+              <li>О форс-мажорах сообщаем руководителю как можно раньше</li>
+              <li>Приходим на смену подготовленными</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Пространство и общение -->
+    <section class="slide dark" data-menu="Пространство и общение" data-num="04">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="" style="opacity:.32;">
+      <div class="pad" style="padding:72px var(--safe) 110px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:28px;">
+          <span class="kicker" style="display:block;margin-bottom:14px;">Правила команды</span>
+          <h2 class="s-title" style="font-size:56px;">Пространство и <span class="em">общение</span></h2>
+        </div>
+        <div class="grid g2 reveal r2" style="gap:44px;align-content:start;margin-bottom:28px;">
+          <div class="card">
+            <div class="c-title">Рабочее пространство</div>
+            <ul class="list">
+              <li>Поддерживаем порядок в раздевалке</li>
+              <li>Личные вещи и телефон храним только в шкафчике</li>
+              <li>Курение — в отведённом месте и с разрешения менеджера</li>
+              <li>Во время активной посадки рабочее место не покидаем</li>
+              <li>После курения моем руки и исключаем запах табака</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="c-title">Экология общения</div>
+            <p class="c-body" style="margin-bottom:14px;">Мы общаемся уважительно, открыто и честно.</p>
+            <ul class="list">
+              <li>Не повышаем голос</li>
+              <li>Не выясняем отношения при гостях</li>
+              <li>Не обсуждаем коллег за их спиной</li>
+              <li>Любые вопросы решаем напрямую или через руководителя</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel gold reveal r3">
+          <div class="serif" style="font-size:33px;color:var(--on-dark);">Мы одна команда</div>
+          <p class="serif italic" style="font-size:27px;color:var(--gold-bright);margin-top:6px;">Гость оценивает не одного официанта. Он оценивает всю команду.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 05 · КОНЦЕПЦИЯ СЕРВИСА ============ -->
+    <section class="slide s-divider dark" data-menu="Концепция сервиса" data-num="05">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">05</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 05</div>
+        <h2 class="divider-title reveal r2">Концепция<br>сервиса</h2>
+        <div class="divider-sub reveal r3">Мы создаём не сервис — мы создаём состояние</div>
+      </div>
+    </section>
+
+    <!-- Мы заботимся о людях -->
+    <section class="slide dark" data-menu="Мы заботимся о людях" data-num="05">
+      <div class="split img-left">
+        <div class="col-img"><img src="assets/img/ambience-guests.jpg" alt="Гости CATALEYA"><div class="veil" style="background:linear-gradient(90deg,rgba(27,40,20,.18),rgba(27,40,20,.55));"></div></div>
+        <div class="col-text">
+          <span class="kicker reveal">Как мы относимся к гостю</span>
+          <h2 class="s-title reveal r2" style="margin-top:18px;font-size:54px;">Мы не обслуживаем столы.<br><span class="em">Мы заботимся о людях.</span></h2>
+          <div class="stack" style="margin-top:26px;max-width:700px;">
+            <p class="body reveal r3">Гости приходят не только за едой — за спокойствием, красотой, вдохновением и временем без спешки.</p>
+            <p class="body reveal r4">Кто-то отмечает событие, кто-то на деловой встрече, кто-то впервые у нас, а кто-то просто хочет отвлечься от городской суеты.</p>
+            <p class="phrase reveal r5">Мы не можем знать, что происходит в жизни каждого. Но можем сделать так, чтобы время у нас стало приятнее.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Предвосхищение -->
+    <section class="slide" data-menu="Предвосхищение" data-num="05">
+      <div class="split">
+        <div class="col-text">
+          <span class="kicker reveal">Концепция сервиса</span>
+          <h2 class="s-title reveal r2" style="margin-top:18px;">Предвосхищение</h2>
+          <p class="s-lead reveal r3" style="margin-top:14px;">Лучший сервис — тот, о котором гостю не приходится просить.</p>
+          <ul class="list reveal r4" style="margin-top:24px;max-width:680px;">
+            <li>Предложить воду раньше, чем о ней попросят</li>
+            <li>Заменить приборы до того, как они понадобятся</li>
+            <li>Убрать лишнюю посуду именно тогда, когда это удобно гостю</li>
+            <li>Подойти в нужный момент — и сохранить дистанцию, когда хочется побыть наедине</li>
+          </ul>
+          <p class="phrase reveal r5" style="margin-top:26px;max-width:680px;">Мы всегда спрашиваем себя: «Что сейчас будет самым ценным для гостя?»</p>
+        </div>
+        <div class="col-img"><img src="assets/img/serving-water.jpg" alt="Предвосхищение"></div>
+      </div>
+    </section>
+
+    <!-- Tone of Voice -->
+    <section class="slide dark" data-menu="Tone of Voice" data-num="05">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="" style="opacity:.28;">
+      <div class="pad" style="padding:80px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal" style="margin-bottom:36px;">
+          <span class="kicker" style="display:block;margin-bottom:16px;">Tone of Voice</span>
+          <h2 class="s-title" style="font-size:60px;">Как звучит <span class="em">CATALEYA</span></h2>
+        </div>
+        <div class="grid g2 reveal r2" style="gap:64px;">
+          <div>
+            <div class="subhead">Мы говорим</div>
+            <ul class="list tick">
+              <li>Спокойно, искренне и с заботой</li>
+              <li>Внимательно слушаем гостя</li>
+              <li>Ведём живой диалог и слышим пожелания</li>
+              <li>Рекомендуем уверенно, профессионально и уместно</li>
+            </ul>
+          </div>
+          <div>
+            <div class="subhead">Мы избегаем</div>
+            <ul class="list avoid">
+              <li>Заученных фраз</li>
+              <li>Высокомерного тона</li>
+              <li>Навязывания рекомендаций</li>
+              <li>Спешки и давления на выбор гостя</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- КХБ бренда -->
+    <section class="slide deep" data-menu="КХБ бренда" data-num="05">
+      <div class="pad" style="padding:76px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal center" style="margin-bottom:38px;">
+          <span class="kicker" style="display:block;margin-bottom:16px;">КХБ бренда</span>
+          <h2 class="s-title" style="font-size:56px;">Три принципа каждого действия</h2>
+        </div>
+        <div class="grid g3 reveal r2" style="gap:32px;">
+          <div class="khb-card"><div class="khb-big">К</div><div class="khb-t">Комфорт</div><p class="khb-d">Атмосфера, в которой гостю спокойно и приятно. Начинается с улыбки, чистоты и внимания к деталям.</p></div>
+          <div class="khb-card"><div class="khb-big">Х</div><div class="khb-t">Харизма</div><p class="khb-d">Не театральность, а уверенность, искренность и любовь к делу. Тепло без лишних слов.</p></div>
+          <div class="khb-card"><div class="khb-big">Б</div><div class="khb-t">Баланс</div><p class="khb-d">Между вниманием и ненавязчивостью, скоростью и спокойствием, профессионализмом и человечностью.</p></div>
+        </div>
+        <p class="serif italic reveal r3 center" style="font-size:31px;color:var(--gold-bright);margin-top:40px;">«Здесь обо мне действительно позаботились.»</p>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 06 · ВНЕШНИЙ ВИД ============ -->
+    <section class="slide s-divider light" data-menu="Внешний вид" data-num="06">
+      <img class="fill-img" src="assets/img/bg-cream-botanical-2.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num" style="color:var(--gold);opacity:.16;">06</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 06</div>
+        <h2 class="divider-title reveal r2">Внешний вид<br>официанта</h2>
+        <div class="divider-sub reveal r3">Внешний вид — это часть сервиса</div>
+      </div>
+    </section>
+
+    <!-- Форма -->
+    <section class="slide" data-menu="Форма" data-num="06">
+      <div class="pad" style="padding:74px var(--safe) 112px;display:grid;grid-template-columns:1fr 1.02fr;gap:64px;align-items:center;">
+        <div>
+          <span class="kicker reveal" style="display:block;margin-bottom:16px;">Внешний вид · Форма</span>
+          <h2 class="s-title reveal r2" style="font-size:56px;">Форму носим<br><span class="em">безупречно</span></h2>
+          <p class="body reveal r3" style="margin-top:22px;max-width:600px;">Гость считывает первое впечатление ещё до первого слова. Каждый сотрудник становится частью атмосферы кафе-оранжереи.</p>
+          <ul class="list reveal r4" style="margin-top:24px;max-width:600px;">
+            <li>На смену — только в чистой, выглаженной фирменной форме</li>
+            <li>Форма застёгнута и аккуратно сидит по фигуре</li>
+            <li>Обувь чистая, однотонная, без ярких элементов</li>
+            <li>Фартук чистый, без пятен и повреждений</li>
+            <li>Бейдж всегда на форме</li>
+          </ul>
+        </div>
+        <div class="reveal r3" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;height:86%;">
+          <div class="photo-card"><img src="assets/img/uniform-male.jpg" alt="Мужская форма" style="object-position:center top;"><div class="pc-cap">Мужская форма</div></div>
+          <div class="photo-card"><img src="assets/img/uniform-female.jpg" alt="Женская форма" style="object-position:center top;"><div class="pc-cap">Женская форма</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ухоженность и эмоции -->
+    <section class="slide dark" data-menu="Внешний вид и эмоции" data-num="06">
+      <img class="fill-img" src="assets/img/greeting-warm.jpg" alt="" style="opacity:.20;object-position:center 28%;">
+      <div class="pad" style="padding:80px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal" style="margin-bottom:32px;">
+          <span class="kicker" style="display:block;margin-bottom:14px;">Внешний вид</span>
+          <h2 class="s-title" style="font-size:56px;">Ухоженность и <span class="em">эмоции</span></h2>
+        </div>
+        <div class="grid g2 reveal r2" style="gap:56px;">
+          <div class="card">
+            <div class="c-title">Ухоженный вид</div>
+            <ul class="list">
+              <li>Волосы чистые и аккуратно собраны</li>
+              <li>Лицо ухоженное, дневной естественный макияж</li>
+              <li>Борода и усы аккуратно оформлены</li>
+              <li>Ногти короткие, чистые, без яркого покрытия</li>
+              <li>Парфюм лёгкий, украшения минималистичные</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="c-title">Эмоции — часть формы</div>
+            <p class="c-body" style="margin-bottom:14px;">Форма делает нас узнаваемыми. Улыбка делает нас настоящими.</p>
+            <ul class="list tick">
+              <li>Встречаем гостя искренней улыбкой</li>
+              <li>Сохраняем спокойствие даже в часы пик</li>
+              <li>Говорим мягко, уверенно и доброжелательно</li>
+              <li>Излучаем заботу, а не усталость</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 07 · ШАГИ И СТАНДАРТЫ ============ -->
+    <section class="slide s-divider dark" data-menu="Шаги и стандарты сервиса" data-num="07">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">07</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 07</div>
+        <h2 class="divider-title reveal r2">Шаги и стандарты<br>сервиса</h2>
+        <div class="divider-sub reveal r3">Три принципа. Десять шагов.</div>
+      </div>
+    </section>
+
+    <!-- Три принципа сервиса -->
+    <section class="slide" data-menu="Три принципа сервиса" data-num="07">
+      <div class="pad" style="padding:74px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal center" style="margin-bottom:34px;">
+          <span class="kicker" style="display:block;margin-bottom:16px;">Основа работы официанта</span>
+          <h2 class="s-title" style="font-size:56px;">Три принципа сервиса</h2>
+        </div>
+        <div class="grid g3 reveal r2" style="gap:32px;">
+          <div class="card"><div class="medallion" style="margin-bottom:20px;"><img src="assets/img/icon-getitright.png" alt=""></div><div class="chip" style="margin-bottom:12px;">Get it right</div><div class="c-title">Сделай всё правильно</div><p class="c-body" style="margin-bottom:14px;">Фундамент сервиса — минимум, который получает каждый гость.</p><ul class="list"><li>Соблюдаем последовательность обслуживания</li><li>Знаем меню, напитки и концепцию</li><li>Проверяем качество перед подачей</li></ul></div>
+          <div class="card"><div class="medallion" style="margin-bottom:20px;"><img src="assets/img/icon-getmeright.png" alt=""></div><div class="chip" style="margin-bottom:12px;">Get me right</div><div class="c-title">Пойми меня правильно</div><p class="c-body" style="margin-bottom:14px;">Одинаковых гостей не бывает — адаптируемся, сохраняя стандарт.</p><ul class="list"><li>Зачем гость пришёл</li><li>Торопится он или отдыхает</li><li>Хочет общения или приватности</li></ul></div>
+          <div class="card"><div class="medallion" style="margin-bottom:20px;"><img src="assets/img/icon-wow.png" alt=""></div><div class="chip" style="margin-bottom:12px;">Wow me if you can</div><div class="c-title">Удиви меня, если сможешь</div><p class="c-body" style="margin-bottom:14px;">Гостей запоминают эмоции — а их создают детали.</p><ul class="list"><li>Своевременная рекомендация</li><li>Внимание к ребёнку и празднику</li><li>Помощь раньше, чем о ней попросят</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Путь гостя · 10 шагов -->
+    <section class="slide deep" data-menu="Путь гостя · 10 шагов" data-num="07">
+      <div class="pad" style="padding:78px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal" style="margin-bottom:36px;">
+          <span class="kicker" style="display:block;margin-bottom:14px;">Стандарты сервиса</span>
+          <h2 class="s-title" style="font-size:56px;">Путь гостя — <span class="em">десять шагов</span></h2>
+        </div>
+        <div class="mini-journey reveal r2" style="grid-template-rows:1fr 1fr;gap:18px;">
+          <div class="mj"><div class="mj-n">01</div><div class="mj-t">Встреча гостя</div></div>
+          <div class="mj"><div class="mj-n">02</div><div class="mj-t">Первый подход</div></div>
+          <div class="mj"><div class="mj-n">03</div><div class="mj-t">Предложение напитков</div></div>
+          <div class="mj"><div class="mj-n">04</div><div class="mj-t">Меню и приём заказа</div></div>
+          <div class="mj"><div class="mj-n">05</div><div class="mj-t">Регистрация заказа</div></div>
+          <div class="mj"><div class="mj-n">06</div><div class="mj-t">Подача блюд</div></div>
+          <div class="mj"><div class="mj-n">07</div><div class="mj-t">Сервис в процессе</div></div>
+          <div class="mj"><div class="mj-n">08</div><div class="mj-t">Десерт и завершение</div></div>
+          <div class="mj"><div class="mj-n">09</div><div class="mj-t">Расчёт</div></div>
+          <div class="mj"><div class="mj-n">10</div><div class="mj-t">Прощание</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 1 · Встреча гостя -->
+    <section class="slide" data-menu="Шаг 1 · Встреча гостя" data-num="07">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">01</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 1 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Встреча гостя</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Первое ощущение гостя о CATALEYA: его заметили, ждали и готовы позаботиться.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Замечаем гостя в первые секунды и устанавливаем зрительный контакт</li>
+              <li>Приветствуем первыми, уточняем наличие брони</li>
+              <li>Помогаем выбрать место и сопровождаем к столу в темпе гостя</li>
+              <li>Подаём меню каждому гостю</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>«Сколько вас?», «Бронь есть?», «Ждите.»</li><li>Оценивающего взгляда и суеты</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Доброе утро. Добро пожаловать в CATALEYA.»</p>
+              <p class="phrase">«Подскажите, пожалуйста, у вас был забронирован стол?»</p>
+              <p class="phrase">«Позвольте помочь выбрать для вас комфортное место.»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 2 · Первый подход -->
+    <section class="slide dark" data-menu="Шаг 2 · Первый подход" data-num="07">
+      <img class="fill-img" src="assets/img/serving-water.jpg" alt="" style="opacity:.16;object-position:center 30%;">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">02</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 2 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Первый подход</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Не позднее двух минут после посадки. Официант задаёт ритм всего визита.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Подходим спокойно и представляемся</li>
+              <li>Предлагаем воду и начать с напитков</li>
+              <li>Кратко ориентируем по меню</li>
+              <li>Берём инициативу, но не давим</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>«Вы готовы?», «Что будете?»</li><li>Стоять над гостем и торопить с выбором</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Меня зовут…, сегодня я буду сопровождать ваш отдых.»</p>
+              <p class="phrase">«Пока вы знакомитесь с меню, могу предложить воду: с газом или без газа?»</p>
+              <p class="phrase">«Если что-то понадобится — я рядом.»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 3 · Предложение напитков -->
+    <section class="slide" data-menu="Шаг 3 · Напитки" data-num="07">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">03</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 3 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Предложение напитков</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Напиток — мягкое начало визита. Мы помогаем гостю войти в атмосферу.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Предлагаем минимум два варианта</li>
+              <li>Учитываем настроение гостя</li>
+              <li>Уточняем температуру воды, к кофе предлагаем воду</li>
+              <li>Рекомендуем сезонные напитки</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>«Что-то из напитков?», «Повторить?»</li><li>«Водичка», «кофеёк», «лимонадчик»</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Сегодня могу рекомендовать освежающий лимонад или наш фирменный чай.»</p>
+              <p class="phrase">«Если хочется начать визит празднично — бокал игристого.»</p>
+              <p class="phrase">«Воду подать охлаждённую или комнатной температуры?»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 4 · Меню и приём заказа -->
+    <section class="slide dark" data-menu="Шаг 4 · Меню и заказ" data-num="07">
+      <img class="fill-img" src="assets/img/table-setting.jpg" alt="" style="opacity:.15;object-position:center 40%;">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">04</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 4 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Меню и приём заказа</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Главное — не просто принять заказ, а помочь гостю сделать правильный выбор.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Узнаём предпочтения, уточняем ограничения и аллергии</li>
+              <li>Рассказываем о блюдах кратко и живо</li>
+              <li>Рекомендуем по структуре меню, предлагаем дополнения</li>
+              <li>Уточняем очерёдность и повторяем заказ</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>«Что на горячее?», «Что-то ещё?»</li><li>«У нас этого нет.», «Аллергии есть?»</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Есть ли продукты, которые вы предпочитаете избегать?»</p>
+              <p class="phrase">«Если вы впервые у нас, рекомендую начать с… — это хорошо раскрывает стиль CATALEYA.»</p>
+              <p class="phrase">«Правильно ли я понял: сначала закуски, затем основные блюда?»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 5 · Регистрация заказа -->
+    <section class="slide" data-menu="Шаг 5 · Регистрация заказа" data-num="07">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">05</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 5 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Регистрация заказа</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">После заказа официант отвечает за точность каждой детали.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Повторяем заказ и вносим его в iiko</li>
+              <li>Проверяем комментарии и очерёдность подачи</li>
+              <li>Подготавливаем приборы</li>
+              <li>Убираем лишнее меню и сервировку</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>Уходить без повтора заказа</li><li>Забывать комментарии и очерёдность</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Я повторю заказ, чтобы всё было точно.»</p>
+              <p class="phrase">«Блюда подать по готовности или сохранить последовательность?»</p>
+              <p class="phrase">«Спасибо, я передаю заказ в работу.»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 6 · Подача блюд -->
+    <section class="slide dark" data-menu="Шаг 6 · Подача блюд" data-num="07">
+      <img class="fill-img" src="assets/img/plate-presentation.jpg" alt="" style="opacity:.16;object-position:center 35%;">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">06</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 6 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Подача блюд</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Подача — это не просто поставить тарелку. Это момент презентации.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Проверяем вид блюда и чистоту тарелки на раздаче</li>
+              <li>Подаём блюдо правильному гостю и называем его</li>
+              <li>Используем правило открытой руки</li>
+              <li>Желаем приятного аппетита</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>«Кто заказывал?», ставить блюдо молча</li><li>Перекрещивать руки перед гостем, тарелки со сколами</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Для вас…»</p>
+              <p class="phrase">«Это… Приятного аппетита.»</p>
+              <p class="phrase">«Всё ли удобно расположено на столе?»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 7 · Сервис в процессе -->
+    <section class="slide" data-menu="Шаг 7 · Сервис в процессе" data-num="07">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">07</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 7 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Сервис в процессе</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">После подачи официант не исчезает — он сопровождает отдых гостя.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Держим стол в поле зрения, подходим через 2–3 минуты</li>
+              <li>Уточняем впечатления, убираем грязную посуду</li>
+              <li>Меняем приборы и следим за напитками</li>
+              <li>Предлагаем повтор напитков заранее</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>Подходить слишком часто, перебивать разговор</li><li>Убирать тарелку без разрешения, проходить мимо пустых бокалов</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Всё ли пришлось по вкусу и подаче?»</p>
+              <p class="phrase">«Позвольте заменить приборы для следующего блюда.»</p>
+              <p class="phrase">«Могу предложить повторить напиток к следующему курсу.»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 8 · Десерт и завершение -->
+    <section class="slide dark" data-menu="Шаг 8 · Десерт и завершение" data-num="07">
+      <img class="fill-img" src="assets/img/dessert-tea.jpg" alt="" style="opacity:.16;object-position:center 40%;">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">08</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 8 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Десерт и завершение</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Завершение визита должно быть таким же внимательным, как начало.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Предлагаем десерт как красивое завершение визита</li>
+              <li>Рекомендуем чай, кофе или напиток после еды</li>
+              <li>Уточняем очерёдность подачи</li>
+              <li>Производим зачистку стола и подаём аккуратно</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>«Десерт будете?», «Чай, кофе?»</li><li>Не убрать стол перед десертом</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Позвольте предложить десерт как мягкое завершение вашего ужина.»</p>
+              <p class="phrase">«К десерту хорошо подойдёт чай… или кофе.»</p>
+              <p class="phrase">«Десерт подать вместе с напитками или сначала напитки?»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 9 · Расчёт -->
+    <section class="slide" data-menu="Шаг 9 · Расчёт" data-num="07">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">09</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 9 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Расчёт</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Расчёт — не конец сервиса. Сервис продолжается до ухода гостя.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Подаём счёт по просьбе гостя</li>
+              <li>Проверяем корректность счёта</li>
+              <li>Уточняем программу лояльности, приносим терминал</li>
+              <li>Благодарим после оплаты</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>Приносить счёт без просьбы, торопить гостя</li><li>Убирать стол, пока гости сидят; прекращать внимание после оплаты</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Конечно, сейчас подготовлю для вас счёт.»</p>
+              <p class="phrase">«Всё ли было комфортно во время визита?»</p>
+              <p class="phrase">«Благодарю вас.»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Шаг 10 · Прощание -->
+    <section class="slide dark" data-menu="Шаг 10 · Прощание" data-num="07">
+      <img class="fill-img" src="assets/img/greeting-warm.jpg" alt="" style="opacity:.18;object-position:center 26%;">
+      <div class="pad" style="padding:66px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="reveal" style="display:flex;align-items:flex-end;gap:24px;">
+          <span class="sb-n">10</span>
+          <div><span class="kicker" style="display:block;margin-bottom:8px;">Шаг 10 · Стандарты сервиса</span><h2 class="s-title" style="font-size:52px;">Прощание</h2></div>
+        </div>
+        <p class="s-lead reveal r2" style="margin:14px 0 28px;">Прощание — последнее впечатление о CATALEYA. Искреннее, не механическое.</p>
+        <div class="grid g2 reveal r3" style="gap:60px;align-content:start;">
+          <div>
+            <div class="subhead">Что делаем</div>
+            <ul class="list tick">
+              <li>Благодарим за визит и прощаемся тепло</li>
+              <li>Приглашаем вернуться</li>
+              <li>При необходимости помогаем с вещами</li>
+              <li>После ухода оперативно готовим стол к новой посадке</li>
+            </ul>
+            <div class="subhead" style="margin-top:26px;">Чего избегаем</div>
+            <ul class="list avoid"><li>Механического, равнодушного прощания</li><li>Забыть пригласить снова</li></ul>
+          </div>
+          <div>
+            <div class="subhead">Речевые обороты</div>
+            <div class="stack-sm">
+              <p class="phrase">«Спасибо, что выбрали CATALEYA.»</p>
+              <p class="phrase">«Были рады видеть вас. До новой встречи.»</p>
+              <p class="phrase">«Пусть этот день станет ещё прекраснее. Расцветайте изнутри.»</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 08 · ЭСТЕТИКА РАБОТЫ ============ -->
+    <section class="slide s-divider dark" data-menu="Эстетика работы" data-num="08">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">08</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 08</div>
+        <h2 class="divider-title reveal r2">Эстетика<br>работы</h2>
+        <div class="divider-sub reveal r3">Не только что мы делаем, но и как</div>
+      </div>
+    </section>
+
+    <!-- Эстетика · детали -->
+    <section class="slide" data-menu="Эстетика · детали" data-num="08">
+      <div class="pad" style="padding:70px var(--safe) 108px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:28px;"><span class="kicker" style="display:block;margin-bottom:14px;">Эстетика работы официанта</span><h2 class="s-title" style="font-size:54px;">Каждое движение — <span class="em">спокойно и красиво</span></h2></div>
+        <div class="grid g2 reveal r2" style="gap:28px 40px;flex:1;align-content:start;">
+          <div class="card tight"><div class="c-title" style="font-size:28px;">Работа с подносом</div><ul class="list"><li>Поднос всегда чистый и сухой</li><li>Переносим одной рукой, уверенно и без спешки</li><li>Не ставим на гостевой стол и не перегружаем</li></ul></div>
+          <div class="card tight"><div class="c-title" style="font-size:28px;">Грязная посуда</div><ul class="list"><li>Убираем своевременно, не дожидаясь просьбы</li><li>Собираем максимально тихо</li><li>Не переносим большие стопки через весь зал</li></ul></div>
+          <div class="card tight"><div class="c-title" style="font-size:28px;">Уборка стола</div><ul class="list"><li>Последовательно: посуда, приборы, затем крошки</li><li>Стол чистый и аккуратный между курсами</li><li>После ухода гостей — безупречный вид</li></ul></div>
+          <div class="card tight"><div class="c-title" style="font-size:28px;">Стейшен официанта</div><ul class="list"><li>Всегда чисто, всё на своих местах</li><li>Достаточный запас приборов и салфеток</li><li>Без личных вещей и лишних предметов</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Эстетика движений -->
+    <section class="slide dark" data-menu="Эстетика движений" data-num="08">
+      <img class="fill-img" src="assets/img/station-detail.jpg" alt="" style="opacity:.15;">
+      <div class="pad" style="padding:80px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal" style="margin-bottom:30px;"><span class="kicker" style="display:block;margin-bottom:14px;">Эстетика движений</span><h2 class="s-title" style="font-size:54px;">Спокойствие даже <span class="em">при полной посадке</span></h2></div>
+        <div class="grid g2 reveal r2" style="gap:56px;">
+          <div><div class="subhead">Как двигаемся</div><ul class="list tick"><li>Двигаемся быстро, но спокойно — не бегаем</li><li>Любое действие выполняем уверенно и аккуратно</li><li>С уважением к пространству гостя</li></ul></div>
+          <div><div class="subhead">Чего не делаем</div><ul class="list avoid"><li>Не стоим без дела в гостевой зоне</li><li>Не скрещиваем руки и не держим их в карманах</li><li>Не разговариваем громко и не показываем суету</li></ul></div>
+        </div>
+        <p class="phrase reveal r3" style="margin-top:32px;max-width:1120px;">Гость замечает не только блюда, но и каждое наше движение. Именно детали создают ощущение высокого уровня ресторана.</p>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 09 · iiko, КУРСЫ, РАЗДАЧА ============ -->
+    <section class="slide s-divider dark" data-menu="iiko, курсы, раздача" data-num="09">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">09</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 09</div>
+        <h2 class="divider-title reveal r2">iiko, курсы<br>и раздача</h2>
+        <div class="divider-sub reveal r3">Точность в системе — забота о госте</div>
+      </div>
+    </section>
+
+    <!-- Работа в iiko -->
+    <section class="slide" data-menu="Работа в iiko" data-num="09">
+      <div class="pad" style="padding:74px var(--safe) 110px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:26px;"><span class="kicker" style="display:block;margin-bottom:14px;">Работа в iiko</span><h2 class="s-title" style="font-size:52px;">Любая ошибка в системе — <span class="em">ошибка для гостя</span></h2></div>
+        <div class="grid g2 reveal r2" style="gap:44px;align-content:start;">
+          <div class="card"><div class="c-title">Мы всегда</div><ul class="list"><li>Работаем только под своей учётной записью</li><li>Проверяем номер стола и количество гостей</li><li>Внимательно проверяем заказ перед отправкой</li><li>Указываем все комментарии для кухни</li><li>Сразу сообщаем менеджеру о допущенной ошибке</li></ul></div>
+          <div class="card"><div class="c-title">Только менеджер смены</div><p class="c-body" style="margin-bottom:14px;">Самостоятельно запрещено выполнять:</p><ul class="list avoid"><li>Отмену блюд и напитков</li><li>Перенос заказа между столами</li><li>Возвраты и удаление позиций после отправки</li><li>Любые финансовые операции</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Работа по курсам -->
+    <section class="slide dark" data-menu="Работа по курсам" data-num="09">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="" style="opacity:.28;">
+      <div class="pad" style="padding:68px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:22px;"><span class="kicker" style="display:block;margin-bottom:14px;">Работа по курсам</span><h2 class="s-title" style="font-size:50px;">Каждое блюдо — в своём <span class="em">порядке</span></h2></div>
+        <div class="grid g3 reveal r2" style="gap:26px;margin-bottom:24px;">
+          <div class="card tight"><div class="c-num">1</div><div class="c-title" style="font-size:27px;">Первый курс</div><p class="c-body">Закуски, стартеры, хлеб, первые блюда и напитки начала визита.</p></div>
+          <div class="card tight"><div class="c-num">2</div><div class="c-title" style="font-size:27px;">Второй курс</div><p class="c-body">Основные блюда.</p></div>
+          <div class="card tight"><div class="c-num">3</div><div class="c-title" style="font-size:27px;">Третий курс</div><p class="c-body">Десерты, чай, кофе и напитки, завершающие ужин.</p></div>
+        </div>
+        <div class="panel reveal r3">
+          <div class="subhead" style="margin-bottom:16px;">Согласуем подачу без профессиональных терминов</div>
+          <div class="rowflex" style="gap:30px;">
+            <p class="phrase" style="flex:1;">«Приносить блюда по мере готовности или подавать последовательно — сначала закуски, затем основные?»</p>
+            <p class="phrase" style="flex:1;">«Рекомендую последовательную подачу: так кухня раскроет каждое блюдо, как задумал шеф.»</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Последний бокал · Раздача -->
+    <section class="slide" data-menu="Последний бокал · Раздача" data-num="09">
+      <div class="pad" style="padding:74px var(--safe) 110px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:26px;"><span class="kicker" style="display:block;margin-bottom:14px;">Правило последнего бокала · Раздача</span><h2 class="s-title" style="font-size:50px;">Спокойствие гостя и <span class="em">командная работа</span></h2></div>
+        <div class="grid g2 reveal r2" style="gap:44px;align-content:start;">
+          <div class="panel gold"><div class="c-title" style="font-size:30px;margin-bottom:12px;">Правило последнего бокала</div><p class="body" style="font-size:22px;">Мы никогда не забираем последний бокал или чашку, даже пустые — это создаёт ощущение, что гостя торопят.</p><p class="body p-soft" style="font-size:20px;margin-top:12px;">Если нужно освободить стол — предложим стакан воды, заменив последний бокал и сохранив комфорт гостя.</p></div>
+          <div class="card"><div class="c-title">На раздаче</div><ul class="list"><li>Проверяем соответствие заказа и внешний вид блюда</li><li>Проверяем чистоту посуды и комплектацию</li><li>Наличие всех соусов, приборов и дополнений</li><li>Сразу забираем готовые блюда</li></ul><ul class="list avoid" style="margin-top:10px;"><li>Не задерживаем кухню и не создаём очередь</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 10 · ИНДИВИДУАЛЬНЫЙ ПОДХОД ============ -->
+    <section class="slide s-divider dark" data-menu="Индивидуальный подход" data-num="10">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">10</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 10</div>
+        <h2 class="divider-title reveal r2">Индивидуальный<br>подход</h2>
+        <div class="divider-sub reveal r3">Не существует одинаковых гостей</div>
+      </div>
+    </section>
+
+    <!-- Типы гостей -->
+    <section class="slide" data-menu="Типы гостей" data-num="10">
+      <div class="pad" style="padding:66px var(--safe) 100px;display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal" style="margin-bottom:32px;"><span class="kicker" style="display:block;margin-bottom:14px;">Индивидуальный подход</span><h2 class="s-title" style="font-size:50px;">Чувствуем настроение <span class="em">каждого гостя</span></h2></div>
+        <div class="grid g5 reveal r2" style="gap:22px;">
+          <div class="card xs"><div class="medallion" style="width:56px;height:56px;margin-bottom:14px;"><img src="assets/img/icon-family.png" alt=""></div><div class="c-title" style="font-size:22px;">Семьи с детьми</div><div class="chip" style="font-size:12px;margin:2px 0 12px;">Безопасность</div><ul class="list"><li>Детский стул и меню</li><li>Блюда ребёнку — первыми</li><li>Предупреждаем о времени</li></ul></div>
+          <div class="card xs"><div class="medallion" style="width:56px;height:56px;margin-bottom:14px;"><img src="assets/img/icon-relax.png" alt=""></div><div class="c-title" style="font-size:22px;">Пришли отдохнуть</div><div class="chip" style="font-size:12px;margin:2px 0 12px;">Спокойствие</div><ul class="list"><li>Не торопим с выбором</li><li>Соблюдаем комфортные паузы</li><li>Рядом, но не вмешиваемся</li></ul></div>
+          <div class="card xs"><div class="medallion" style="width:56px;height:56px;margin-bottom:14px;"><img src="assets/img/icon-business.png" alt=""></div><div class="c-title" style="font-size:22px;">Деловые гости</div><div class="chip" style="font-size:12px;margin:2px 0 12px;">Скорость · точность</div><ul class="list"><li>Быстро принимаем заказ</li><li>Уточняем раздельный счёт</li><li>Контролируем время подачи</li></ul></div>
+          <div class="card xs"><div class="medallion" style="width:56px;height:56px;margin-bottom:14px;"><img src="assets/img/icon-couple.png" alt=""></div><div class="c-title" style="font-size:22px;">Пары</div><div class="chip" style="font-size:12px;margin:2px 0 12px;">Приватность</div><ul class="list"><li>Подходим в уместные моменты</li><li>Говорим спокойным голосом</li><li>Не прерываем разговор</li></ul></div>
+          <div class="card xs"><div class="medallion" style="width:56px;height:56px;margin-bottom:14px;"><img src="assets/img/icon-regular.png" alt=""></div><div class="c-title" style="font-size:22px;">Постоянные гости</div><div class="chip" style="font-size:12px;margin:2px 0 12px;">Узнаваемость</div><ul class="list"><li>Приветствуем как знакомого</li><li>Учитываем предпочтения</li><li>Благодарим за доверие</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Главное правило подхода -->
+    <section class="slide s-quote deep" data-menu="Главное правило подхода" data-num="10">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="" style="opacity:.4;">
+      <div class="quote-inner">
+        <img class="quote-orchid reveal" src="assets/brand/cataleya-orchid-gold.png" alt="">
+        <p class="quote-big reveal r2">«Мы не меняем стандарты сервиса.<br>Мы меняем <span class="em">способ их подачи</span>, чтобы каждому гостю было по-настоящему комфортно.»</p>
+        <div class="quote-attr reveal r3">Хороший официант знает стандарты · отличный — чувствует человека</div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 11 · КОНФЛИКТЫ ============ -->
+    <section class="slide s-divider dark" data-menu="Работа с конфликтами" data-num="11">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">11</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 11</div>
+        <h2 class="divider-title reveal r2">Работа<br>с конфликтами</h2>
+        <div class="divider-sub reveal r3">Запоминают не ошибку, а то, как мы её исправили</div>
+      </div>
+    </section>
+
+    <!-- BLAST -->
+    <section class="slide dark" data-menu="Алгоритм BLAST" data-num="11">
+      <div class="pad" style="padding:76px var(--safe);display:flex;flex-direction:column;justify-content:center;">
+        <div class="s-head reveal center" style="margin-bottom:44px;"><span class="kicker" style="display:block;margin-bottom:14px;">Алгоритм решения ситуации</span><h2 class="s-title" style="font-size:56px;letter-spacing:.12em;">B · L · A · S · T</h2></div>
+        <div class="grid g5 reveal r2" style="gap:26px;align-items:start;">
+          <div class="letter-col"><div class="bigletter">B</div><h4>Believe</h4><div class="lc-en">Поверь</div><p>Не спорим с гостем. Его эмоции всегда реальны.</p></div>
+          <div class="letter-col"><div class="bigletter">L</div><h4>Listen</h4><div class="lc-en">Выслушай</div><p>Дайте договорить. Не перебивайте и не оправдывайтесь.</p></div>
+          <div class="letter-col"><div class="bigletter">A</div><h4>Apologize</h4><div class="lc-en">Извинись</div><p>Извинитесь за ситуацию, даже если вина не ваша.</p></div>
+          <div class="letter-col"><div class="bigletter">S</div><h4>Solve</h4><div class="lc-en">Реши</div><p>Решите сами или сразу пригласите менеджера.</p></div>
+          <div class="letter-col"><div class="bigletter">T</div><h4>Thank</h4><div class="lc-en">Поблагодари</div><p>Любая обратная связь помогает нам становиться лучше.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- СССР + запрещено -->
+    <section class="slide dark" data-menu="Правило СССР" data-num="11">
+      <div class="pad" style="padding:68px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:30px;"><span class="kicker" style="display:block;margin-bottom:14px;">Правило СССР</span><h2 class="s-title" style="font-size:50px;">Как держимся в сложной ситуации</h2></div>
+        <div class="grid g4 reveal r2" style="gap:24px;margin-bottom:30px;">
+          <div class="letter-col"><div class="bigletter">С</div><h4>Сохраняй спокойствие</h4><p>Гость может повышать голос. Сотрудник — никогда.</p></div>
+          <div class="letter-col"><div class="bigletter">С</div><h4>Слушай</h4><p>Сначала пойми проблему, потом предлагай решение.</p></div>
+          <div class="letter-col"><div class="bigletter">С</div><h4>Согласуй</h4><p>Не выходи за пределы полномочий. Сомневаешься — позови менеджера.</p></div>
+          <div class="letter-col"><div class="bigletter">Р</div><h4>Реши и вернись</h4><p>«Удалось ли исправить ситуацию? Всё ли сейчас хорошо?»</p></div>
+        </div>
+        <div class="panel gold reveal r3" style="display:flex;gap:40px;align-items:center;flex-wrap:wrap;">
+          <div style="flex:1;min-width:420px;"><div class="subhead" style="margin-bottom:12px;">Запрещено</div><p class="body" style="font-size:20px;">Спорить с гостем · оправдываться · обвинять коллег или кухню · обсуждать конфликт при гостях · обещать скидки без согласования · исчезать после передачи менеджеру.</p></div>
+          <p class="serif italic" style="flex:1;min-width:360px;font-size:27px;color:var(--gold-bright);">После любого конфликта сервис продолжается. Мы остаёмся внимательными и заботливыми до самого прощания.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER 12 · АКТИВНАЯ ПОСАДКА ============ -->
+    <section class="slide s-divider dark" data-menu="Активная посадка" data-num="12">
+      <img class="fill-img" src="assets/img/bg-green-botanical-2.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num">12</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Раздел 12</div>
+        <h2 class="divider-title reveal r2">Работа при<br>активной посадке</h2>
+        <div class="divider-sub reveal r3">Высокая загрузка — не повод снижать качество</div>
+      </div>
+    </section>
+
+    <!-- Приоритеты -->
+    <section class="slide" data-menu="Приоритеты работы" data-num="12">
+      <div class="pad" style="padding:70px var(--safe) 108px;display:grid;grid-template-columns:1.05fr .95fr;gap:64px;align-items:center;">
+        <div>
+          <span class="kicker reveal" style="display:block;margin-bottom:14px;">Приоритеты работы</span>
+          <h2 class="s-title reveal r2" style="font-size:50px;margin-bottom:20px;">Сначала — то, что влияет на <span class="em">впечатление гостя</span></h2>
+          <ul class="prio reveal r3">
+            <li>Встреча и посадка новых гостей</li>
+            <li>Подача готовых блюд и напитков</li>
+            <li>Приём заказа</li>
+            <li>Зачистка стола и замена приборов</li>
+            <li>Расчёт гостей</li>
+            <li>Подготовка столов к новой посадке</li>
+          </ul>
+        </div>
+        <div class="stack reveal r3">
+          <div class="card"><div class="c-title" style="font-size:28px;">Правило занятых рук</div><p class="c-body">Каждое перемещение приносит пользу. Идёшь к столу — возьми напитки или приборы; возвращаешься — забери посуду.</p><p class="serif italic" style="font-size:22px;color:var(--gold);margin-top:12px;">Пустые руки — это потерянное время.</p></div>
+          <div class="card"><div class="c-title" style="font-size:28px;">Правило 60 секунд</div><p class="c-body">Не можешь подойти в течение минуты — установи контакт взглядом и улыбкой:</p><p class="phrase" style="margin-top:12px;">«Я вижу вас. Через минуту обязательно подойду.»</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Спокойствие команды -->
+    <section class="slide dark" data-menu="Спокойствие команды" data-num="12">
+      <img class="fill-img" src="assets/img/tray-grace.jpg" alt="" style="opacity:.16;object-position:center 30%;">
+      <div class="pad" style="padding:72px var(--safe) 104px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:28px;"><span class="kicker" style="display:block;margin-bottom:14px;">Спокойствие команды</span><h2 class="s-title" style="font-size:50px;">Запара — только <span class="em">в голове</span></h2></div>
+        <div class="grid g2 reveal r2" style="gap:44px;margin-bottom:26px;align-content:start;">
+          <div class="card"><div class="c-title">Просить помощь — профессионально</div><ul class="list tick"><li>Обратись за помощью к соседнему официанту</li><li>Попроси менеджера принять заказ или вынести блюда</li><li>Помогай коллегам, когда освобождаешься сам</li></ul></div>
+          <div class="card"><div class="c-title">Не создаём суету</div><ul class="list avoid"><li>Не бегаем и не общаемся громко</li><li>Не обсуждаем проблемы кухни или бара</li><li>Не показываем усталость, не собираемся группами</li></ul></div>
+        </div>
+        <div class="panel gold reveal r3" style="text-align:center;">
+          <p class="serif" style="font-size:30px;color:var(--on-dark);">Сначала — самое важное. Затем — самое срочное. После — всё остальное.</p>
+          <p class="serif italic" style="font-size:34px;color:var(--gold-bright);margin-top:8px;">«Торопись медленно.»</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DIVIDER · FAQ ============ -->
+    <section class="slide s-divider light" data-menu="Частые вопросы гостей" data-num="">
+      <img class="fill-img" src="assets/img/bg-cream-botanical-1.jpg" alt="">
+      <div class="veil"></div>
+      <div class="divider-num" style="color:var(--gold);opacity:.16;">?</div>
+      <div class="divider-inner">
+        <div class="divider-kicker kicker reveal">Справочник</div>
+        <h2 class="divider-title reveal r2">Частые вопросы<br>гостей</h2>
+        <div class="divider-sub reveal r3">Отвечаем уверенно, спокойно и доброжелательно</div>
+      </div>
+    </section>
+
+    <!-- FAQ 1 -->
+    <section class="slide" data-menu="Вопросы гостей · 1" data-num="">
+      <div class="pad" style="padding:66px var(--safe) 100px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:20px;"><span class="kicker" style="display:block;margin-bottom:12px;">Частые вопросы гостей</span></div>
+        <div class="grid g2 reveal r2" style="gap:0 72px;">
+          <div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«У вас ПП-кафе?»</div><div class="faq-a">«Мы — кафе осознанного питания. Не строгие диеты, а баланс вкуса, пользы и эстетики.»</div></div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Можно просто пофотографироваться?»</div><div class="faq-a">«Конечно. Любительская съёмка разрешена; профессиональную — заранее согласуйте с менеджером.»</div></div>
+            <div class="faq-item" style="border-bottom:none;"><div class="faq-q"><span class="qm">?</span>«Цветы настоящие?»</div><div class="faq-a">«Да, большинство растений — живые. Это часть нашей концепции кафе-оранжереи.»</div></div>
+          </div>
+          <div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Мы просто в туалет.»</div><div class="faq-a">«Помогаем семьям с детьми, беременным и пожилым гостям. В остальных случаях туалет — для гостей кафе. Благодарим за понимание.»</div></div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Где находится Кроличья нора?»</div><div class="faq-a">«Рядом с CATALEYA, на территории парка. С удовольствием покажу, как пройти.»</div></div>
+            <div class="faq-item" style="border-bottom:none;"><div class="faq-q"><span class="qm">?</span>«У нас свой торт.»</div><div class="faq-a">«Такая возможность есть при соблюдении правил. Приглашу менеджера — он расскажет условия.»</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ 2 -->
+    <section class="slide dark" data-menu="Вопросы гостей · 2" data-num="">
+      <img class="fill-img" src="assets/img/bg-green-botanical-1.jpg" alt="" style="opacity:.26;">
+      <div class="pad" style="padding:60px var(--safe) 96px;display:flex;flex-direction:column;">
+        <div class="s-head reveal" style="margin-bottom:18px;"><span class="kicker" style="display:block;margin-bottom:12px;">Частые вопросы гостей</span></div>
+        <div class="grid g2 reveal r2" style="gap:0 72px;">
+          <div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Можно взять десерты из La Rosée к вам?»</div><div class="faq-a">«К сожалению, нет. У каждого проекта собственное меню и свои стандарты обслуживания.»</div></div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Можно закрыть весь зал?»</div><div class="faq-a">«Такая возможность есть. Приглашу менеджера, чтобы обсудить детали мероприятия.»</div></div>
+            <div class="faq-item" style="border-bottom:none;"><div class="faq-q"><span class="qm">?</span>«Можно столик с розеткой?»</div><div class="faq-a">«Конечно. Если такой стол свободен, с удовольствием предложу его вам.»</div></div>
+          </div>
+          <div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Это Галицкий построил?»</div><div class="faq-a">«CATALEYA — на территории парка „Краснодар", но это самостоятельный проект компании „Форно Групп".»</div></div>
+            <div class="faq-item"><div class="faq-q"><span class="qm">?</span>«Можно покормить ребёнка своей едой?»</div><div class="faq-a">«Конечно. К детскому питанию мы всегда относимся с пониманием.»</div></div>
+            <div class="faq-item" style="border-bottom:none;"><div class="faq-q"><span class="qm">?</span>«Есть детская комната?»</div><div class="faq-a">«Пока нет, но мы всегда рады семьям с детьми и сделаем ваш отдых комфортным.»</div></div>
+          </div>
+        </div>
+        <div class="panel gold reveal r3" style="margin-top:26px;text-align:center;">
+          <p class="serif italic" style="font-size:28px;color:var(--gold-bright);">Не знаешь ответ — не придумывай: «Позвольте уточнить информацию, чтобы дать вам точный ответ» — и обратись к менеджеру.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ФИНАЛ ============ -->
+    <section class="slide s-cover deep" data-menu="Теперь ты — часть CATALEYA" data-num="">
+      <img class="fill-img" src="assets/img/ambience-guests.jpg" alt="">
+      <div class="veil" style="background:linear-gradient(180deg,rgba(20,26,14,.55) 0%,rgba(20,26,14,.72) 52%,rgba(18,24,13,.92) 100%);"></div>
+      <div class="cover-inner" style="padding:0 240px;">
+        <img class="reveal" src="assets/brand/cataleya-orchid-gold.png" alt="" style="width:84px;margin-bottom:26px;">
+        <div class="kicker reveal r2" style="margin-bottom:22px;">Теперь ты — часть CATALEYA</div>
+        <h2 class="cover-title reveal r2 serif" style="font-size:62px;font-weight:400;">Настоящий ресторан создают<br>не стены, а <span style="font-style:italic;color:var(--gold-bright);">люди</span></h2>
+        <p class="reveal r3" style="font-family:var(--font-b);font-size:24px;line-height:1.6;color:var(--on-dark-soft);max-width:960px;margin-top:26px;">Мы не просто подаём блюда — мы создаём место, куда хочется возвращаться.</p>
+        <div class="reveal r4" style="margin-top:40px;">
+          <div class="serif" style="font-size:40px;color:var(--on-dark);">Добро пожаловать в CATALEYA.</div>
+          <div class="serif italic" style="font-size:44px;color:var(--gold-soft);margin-top:6px;">Расцветай изнутри. Помогай расцветать другим.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDES_HERE -->
+
+    <!-- persistent chrome -->
+    <footer class="chrome">
+      <img class="chrome-logo logo-light" src="assets/brand/cataleya-03.png" alt="CATALEYA">
+      <img class="chrome-logo logo-dark" src="assets/brand/cataleya-mark-cream.png" alt="CATALEYA">
+      <div class="chrome-page"><b id="pageNow">1</b> / <span id="pageTotal">1</span></div>
+    </footer>
+  </main>
+</div>
+
+<div class="rotate-hint" id="rotateHint">
+  <div class="rh-in">
+    <img class="rh-orchid" src="assets/brand/cataleya-orchid-gold.png" alt="">
+    <svg class="rh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="2.5" width="7" height="19" rx="1.8"/><line x1="11" y1="19" x2="13" y2="19"/><path d="M4.5 8.5 A 9 9 0 0 0 3 13"/><path d="M19.5 15.5 A 9 9 0 0 0 21 11"/><polyline points="2 8 4.5 8.5 5 6"/><polyline points="22 16 19.5 15.5 19 18"/></svg>
+    <h4>Поверните телефон</h4>
+    <p>Сервис-бук CATALEYA лучше смотреть горизонтально — так каждый слайд заполнит экран целиком.</p>
+    <button id="rhDismiss">Смотреть вертикально</button>
+  </div>
+</div>
+
+<nav class="deck-controls" aria-label="Навигация">
+  <button id="btnPrev">‹ Назад</button>
+  <div class="dot"></div>
+  <button id="btnMenu">Содержание</button>
+  <div class="dot"></div>
+  <button id="btnNext">Далее ›</button>
+</nav>
+<div class="hint">← → навигация · M содержание · F экран</div>
+
+<div class="menu" id="menu"><h3>Содержание</h3><div class="menu-grid" id="menuGrid"></div></div>
+
+<script>
+class Deck{
+  constructor(){
+    this.slides=[...document.querySelectorAll('.slide')];
+    this.stage=document.getElementById('deckStage');
+    this.i=0;
+    this.scale();addEventListener('resize',()=>this.scale());
+    document.getElementById('pageTotal').textContent=this.slides.length;
+    this.buildMenu();this.keys();this.wheel();this.touch();this.buttons();
+    // hash deep-link
+    const h=parseInt(location.hash.replace('#s',''));
+    this.show(Number.isFinite(h)&&h>0?h-1:0);
+  }
+  scale(){
+    const f=Math.min(innerWidth/1920,innerHeight/1080);
+    const x=(innerWidth-1920*f)/2,y=(innerHeight-1080*f)/2;
+    this.stage.style.transform=`translate(${x}px,${y}px) scale(${f})`;
+  }
+  show(n){
+    this.i=Math.max(0,Math.min(n,this.slides.length-1));
+    this.slides.forEach((s,k)=>{const on=k===this.i;s.classList.toggle('active',on);s.classList.toggle('visible',on);});
+    const cur=this.slides[this.i];
+    const dark=cur.classList.contains('dark')||cur.classList.contains('deep')||cur.dataset.chrome==='dark';
+    this.stage.classList.toggle('dark-chrome',dark);
+    document.getElementById('pageNow').textContent=this.i+1;
+    document.getElementById('progress').style.width=((this.i+1)/this.slides.length*100)+'%';
+    history.replaceState(null,'','#s'+(this.i+1));
+  }
+  next(){this.show(this.i+1);}
+  prev(){this.show(this.i-1);}
+  buildMenu(){
+    const g=document.getElementById('menuGrid');
+    this.slides.forEach((s,k)=>{
+      if(!s.dataset.menu)return;
+      const a=document.createElement('a');
+      a.innerHTML=`<span class="mi-num">${s.dataset.num||''}</span>${s.dataset.menu}`;
+      a.onclick=()=>{this.show(k);this.toggleMenu(false);};
+      g.appendChild(a);
+    });
+  }
+  toggleMenu(force){const m=document.getElementById('menu');const open=force!==undefined?force:!m.classList.contains('open');m.classList.toggle('open',open);}
+  keys(){addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();this.next();}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();this.prev();}
+    else if(e.key==='Home'){this.show(0);}else if(e.key==='End'){this.show(this.slides.length-1);}
+    else if(e.key==='m'||e.key==='M'){this.toggleMenu();}
+    else if(e.key==='Escape'){this.toggleMenu(false);}
+    else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+  });}
+  wheel(){let t=0;addEventListener('wheel',e=>{const now=Date.now();if(now-t<650)return;if(Math.abs(e.deltaY)<24)return;t=now;e.deltaY>0?this.next():this.prev();},{passive:true});}
+  touch(){let x=0,y=0;addEventListener('touchstart',e=>{x=e.touches[0].clientX;y=e.touches[0].clientY;},{passive:true});
+    addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-x,dy=e.changedTouches[0].clientY-y;
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50)dx<0?this.next():this.prev();},{passive:true});}
+  buttons(){
+    document.getElementById('btnNext').onclick=()=>this.next();
+    document.getElementById('btnPrev').onclick=()=>this.prev();
+    document.getElementById('btnMenu').onclick=()=>this.toggleMenu();
+    document.getElementById('menu').onclick=e=>{if(e.target.id==='menu')this.toggleMenu(false);};
+  }
+}
+document.fonts&&document.fonts.ready.then(()=>window.__deck&&window.__deck.scale());
+window.__deck=new Deck();
+(function(){
+  var rh=document.getElementById('rotateHint'),b=document.getElementById('rhDismiss');
+  if(b)b.addEventListener('click',function(){rh.classList.add('dismissed');});
+  addEventListener('orientationchange',function(){setTimeout(function(){window.__deck&&window.__deck.scale();},250);});
+})();
+</script>
+</body>
+</html>

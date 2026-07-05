@@ -1,0 +1,6 @@
+.DS_Store
+**/.DS_Store
+*.log
+# Source assets not referenced by the deck (regeneratable via gen_images.py + sips)
+assets/generated/
+assets/photos/
