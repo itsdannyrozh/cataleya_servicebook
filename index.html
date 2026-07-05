@@ -411,15 +411,17 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 @keyframes rhspin{0%,52%{transform:rotate(0)}80%,100%{transform:rotate(-90deg)}}
 
 @media print{
+  @page{size:1920px 1080px;margin:0;}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
   html,body{width:1920px;height:auto;overflow:visible;background:#fff;}
   .deck-viewport{position:static;overflow:visible;background:#fff;}
   .deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none;}
-  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;overflow:hidden;}
+  .slide:last-of-type{break-after:auto;page-break-after:auto;}
   .slide *{transition:none!important;animation:none!important;}
   .reveal{opacity:1!important;transform:none!important;}
   .grow-line{transform:scaleX(1)!important;}
-  .deck-controls,.hint,.menu,.progress{display:none!important;}
-  .chrome{position:absolute;}
+  .deck-controls,.hint,.menu,.progress,.chrome,.rotate-hint{display:none!important;}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important;}
